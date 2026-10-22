@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "profile_id": "aerospace_defense_monitoring",
+  "profile_version": 1,
+  "display_name": "Aerospace & Defense Monitoring",
+  "description": "The proven ADSB + flight + SEC signal: military and interesting aviation around key facilities, correlated with corporate material events, enriched with callsign/graph/tempo intelligence.",
+  "mission": "Monitor aerospace and defense activity through aviation signals and regulatory filings, producing high-signal correlations for operator review.",
+  "status": "draft",
+  "compatibility": {
+    "min_schema_version": 1,
+    "requires_data_boundary": "/data"
+  },
+  "source_policy": {
+    "allowed_source_types": ["aviation_signals", "regulatory_filings"],
+    "external_intake": true
+  },
+  "collector_policy": {
+    "enabled_collectors": ["flight", "adsb", "sec"],
+    "disabled_collectors": ["dms_broadcast"]
+  },
+  "observation_policy": {
+    "content_tier": "public",
+    "raw_content": false
+  },
+  "graph_policy": {"enabled": true},
+  "correlation_policy": {"enabled": true, "min_publish_score": 7.0},
+  "temporal_policy": {"enabled": true, "tempo_enabled": true},
+  "privacy_policy": {
+    "local_only": false,
+    "external_model_calls": false,
+    "raw_content_export": false
+  },
+  "publishing_policy": {
+    "public_publishing": false,
+    "gated_correlations_only": true,
+    "requires_operator_approval": true,
+    "allowed_fields": ["entity", "event_type", "score", "signals", "summary"]
+  },
+  "backup_policy": {
+    "backup_required_on_activation": true,
+    "data_root": "/data/profiles/aerospace_defense_monitoring"
+  },
+  "interface_policy": {
+    "local_gateway": true,
+    "mcp_read_only": true
+  },
+  "dead_mans_switch_policy": {"eligible": false},
+  "metadata": {
+    "maturity_note": "Architectural seed narrowing the current proven signal into a selectable profile."
+  }
+}

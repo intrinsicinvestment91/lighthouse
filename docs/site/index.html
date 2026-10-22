@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lighthouse — Intelligence Platform</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="site-title" href="index.html"><span class="beacon"></span> Lighthouse</a>
+  <span class="header-status">YELLOW — Operational</span>
+</header>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Start Here</span>
+      <a href="index.html" class="active">Home</a>
+      <a href="overview.html">What is Lighthouse?</a>
+      <a href="capabilities.html">Capabilities</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Using It</span>
+      <a href="day-to-day.html">Day-to-Day Usage</a>
+      <a href="operator.html">Operator Guide</a>
+      <a href="targets.html">Target Profiles</a>
+      <a href="start9.html">Start9 Deployment</a>
+      <a href="local-gateway.html">Local Gateway</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Understanding It</span>
+      <a href="signals.html">Signal Sources</a>
+      <a href="graph.html">Graph Intelligence</a>
+      <a href="profiles.html">Intelligence Profiles</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="gateway-boundary.html">Gateway Boundary</a>
+      <a href="source-packs.html">Repository Source Packs</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Security & Decisions</span>
+      <a href="security.html">Security</a>
+      <a href="adr.html">Architecture Decisions</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">For Developers</span>
+      <a href="developer.html">Developer Guide</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+  </nav>
+  <main>
+    <h1>Lighthouse</h1>
+    <p class="page-intro">A persistent, graph-based intelligence platform that watches public signals, connects related evidence, and surfaces only high-confidence findings.</p>
+
+    <div class="callout callout-success">
+      <strong>Operational as of May 2026</strong>
+      Running on Start9 home server. SEC, ADSB, flight, and correlation flows are producing real signals. Graph persistence and weighted scoring are live.
+    </div>
+
+    <h2>What Lighthouse Does</h2>
+    <p>Lighthouse watches multiple public data sources — SEC filings, aircraft transponder data, research publications, government newsrooms — and automatically finds patterns that would take hours to spot manually.</p>
+
+    <div class="pipeline">
+      <span class="pipeline-step">Targets</span>
+      <span class="pipeline-arrow">→</span>
+      <span class="pipeline-step">Collectors</span>
+      <span class="pipeline-arrow">→</span>
+      <span class="pipeline-step">Alerts</span>
+      <span class="pipeline-arrow">→</span>
+      <span class="pipeline-step">Correlations</span>
+      <span class="pipeline-arrow">→</span>
+      <span class="pipeline-step">Graph</span>
+      <span class="pipeline-arrow">→</span>
+      <span class="pipeline-step">MCP / CLI / Nostr</span>
+    </div>
+
+    <p>It does not try to publish everything. It is designed to filter noise and only surface events where multiple independent signals point to the same entity at the same time.</p>
+
+    <h2>What It Watches Today</h2>
+    <div class="card-grid">
+      <div class="card">
+        <p class="card-title">SEC Filings</p>
+        <p class="card-body">Material event 8-K filings from watched companies via EDGAR full-text search. Flags items 1.01, 1.02, 2.01, 5.02, 8.01.</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Military Aviation</p>
+        <p class="card-body">Aircraft transponder data (ADSB) and OpenSky flight data around key defense facilities. Detects AE-range military hex codes and known callsign prefixes.</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Research Publications</p>
+        <p class="card-body">arXiv paper activity for a tracked roster of researchers. Flags unusual silence after a publication threshold.</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Government Newsrooms</p>
+        <p class="card-body">DoD, NASA, DoE newsroom archives via RSS feeds and HTML fallback. Archived locally and pinned to IPFS.</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Narrative Analysis</p>
+        <p class="card-body">LLM-scored urgency and specificity on archived press releases. Detects tone shifts (requires Anthropic API key).</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Patents</p>
+        <p class="card-body">Patent filing rate anomalies and USPTO searches. Currently gracefully degraded — patent provider is disabled by default pending a confirmed ODP adapter.</p>
+      </div>
+    </div>
+
+    <h2>Current Operational Status</h2>
+    <table>
+      <thead>
+        <tr><th>Area</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>SEC alerts and correlations</td><td><span class="status-live">Live</span></td></tr>
+        <tr><td>ADSB military aviation monitoring</td><td><span class="status-live">Live</span></td></tr>
+        <tr><td>Graph persistence and backfill</td><td><span class="status-live">Live</span></td></tr>
+        <tr><td>Callsign enrichment and history</td><td><span class="status-live">Live</span></td></tr>
+        <tr><td>Weighted correlation scoring</td><td><span class="status-live">Live</span></td></tr>
+        <tr><td>Nostr safe heartbeat</td><td><span class="status-live">Live</span></td></tr>
+        <tr><td>Target profiles and signal routing</td><td><span class="status-live">Live</span></td></tr>
+        <tr><td>Narrative analyzer</td><td><span class="status-degraded">Requires <code>ANTHROPIC_API_KEY</code></span></td></tr>
+        <tr><td>Patent collection</td><td><span class="status-degraded">Gracefully disabled — ODP adapter pending</span></td></tr>
+        <tr><td>Graph-native callsigns</td><td><span class="status-live">Live</span></td></tr>
+        <tr><td>Temporal pattern analysis</td><td><span class="status-live">Live</span></td></tr>
+        <tr><td>Local intelligence gateway</td><td><span class="status-live">Live</span></td></tr>
+      </tbody>
+    </table>
+
+    <h2>Where to Start</h2>
+    <ul>
+      <li><strong>New to Lighthouse?</strong> Read <a href="overview.html">What is Lighthouse?</a></li>
+      <li><strong>What can it actually do?</strong> The <a href="capabilities.html">Capabilities</a> guide — the easiest page to understand, with an honest status on every feature.</li>
+      <li><strong>Where is it going?</strong> See the <a href="roadmap.html">Roadmap</a> (phases A–K).</li>
+      <li><strong>Operating it?</strong> See the <a href="operator.html">Operator Guide</a> and <a href="start9.html">Start9 Deployment</a>.</li>
+      <li><strong>Building or extending it?</strong> See the <a href="developer.html">Developer Guide</a>.</li>
+      <li><strong>Why was it built this way?</strong> See <a href="adr.html">Architecture Decisions</a> and <a href="security.html">Security</a>.</li>
+      <li><strong>Find any doc:</strong> the <a href="../ARCHITECTURE_INDEX.md">Architecture Index</a> is the navigation hub.</li>
+    </ul>
+  </main>
+</div>
+<footer>
+  <span>Lighthouse — pattern-match-sentinel</span>
+  <a href="../ARCHITECTURE_INDEX.md">Architecture Index</a>
+  <a href="../ROADMAP.md">Roadmap</a>
+  <a href="../ROADMAP_STATUS.md">Status</a>
+  <a href="../adr/README.md">ADRs</a>
+  <span class="text-muted" style="margin-left:auto;">Static explainer — canonical source: Markdown docs</span>
+</footer>
+<script src="site.js"></script>
+</body>
+</html>

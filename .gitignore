@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.whl
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Pipeline runtime/generated data outputs (local only)
+data/**/*.db
+data/**/*.sqlite
+data/**/*.sqlite3
+data/**/*.json
+data/**/*.jsonl
+data/**/*.html
+data/**/*.log
+data/**/*.csv
+data/**/*.tmp
+data/**/*.bak
+data/**/archive/
+data/**/archives/
+data/**/snapshots/
+data/nostr/
+
+# Preserve directory placeholders
+!data/**/.gitkeep
+
+# Test & lint caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Playwright browser cache
+/ms-playwright/
+
+# Packaging — canonical locks are requirements*.lock (pip-compile via make lock)
+uv.lock
+
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Local agent/editor files (not part of the public release)
+CLAUDE.md
+.claude/
+.cursor/

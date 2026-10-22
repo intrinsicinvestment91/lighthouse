@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Repository Source Packs | Lighthouse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="site-title" href="index.html"><span class="beacon"></span> Lighthouse</a>
+  <span class="header-status">YELLOW — Operational</span>
+</header>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Start Here</span>
+      <a href="index.html">Home</a>
+      <a href="overview.html">What is Lighthouse?</a>
+      <a href="capabilities.html">Capabilities</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Using It</span>
+      <a href="day-to-day.html">Day-to-Day Usage</a>
+      <a href="operator.html">Operator Guide</a>
+      <a href="targets.html">Target Profiles</a>
+      <a href="start9.html">Start9 Deployment</a>
+      <a href="local-gateway.html">Local Gateway</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Understanding It</span>
+      <a href="signals.html">Signal Sources</a>
+      <a href="graph.html">Graph Intelligence</a>
+      <a href="profiles.html">Intelligence Profiles</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="gateway-boundary.html">Gateway Boundary</a>
+      <a href="source-packs.html" class="active">Repository Source Packs</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Security & Decisions</span>
+      <a href="security.html">Security</a>
+      <a href="adr.html">Architecture Decisions</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">For Developers</span>
+      <a href="developer.html">Developer Guide</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+  </nav>
+  <main>
+    <h1>Repository Source Packs</h1>
+    <p class="page-intro">A way for Lighthouse to observe public code repositories as <strong>one
+    deterministic observation source</strong> — not a second intelligence engine. Canonical source:
+    <a href="../REPOSITORY_SOURCE_PACKS.md"><code>docs/REPOSITORY_SOURCE_PACKS.md</code></a>
+    (decision: <a href="adr.html">ADR-0008</a>).</p>
+
+    <div class="callout callout-warn">
+      <strong>Architecture-only.</strong> There is no source-pack ingestion engine in this repository
+      today. The capability is represented by the declarative
+      <code>repository_capability_discovery</code> profile seed and the Gateway's admission flow. This
+      page fixes the architecture so future work doesn't drift.
+    </div>
+
+    <h2>What it is — and is not</h2>
+    <ul>
+      <li>A source pack is <strong>one observation source</strong> that enters the <strong>fact-first pipeline</strong>: admission → repository intake → versioned observations → normalization → fact store → exact queries and cross-scope facts → profile-owned candidate rules → hypotheses → reviewed findings → optional Gateway-controlled release.</li>
+      <li>It is <strong>not a second engine</strong> — it never re-derives correlation or graph independently.</li>
+      <li>It is <strong>not a plugin and not executable</strong> — like profiles, it declares <em>what</em> to observe, never <em>how</em> to execute anything.</li>
+      <li>It is <strong>not the invention engine</strong> — that is a separate concern, now preserved privately with a provenance manifest, pending <em>selective</em> migration (ADR-0005, ADR-0020).</li>
+    </ul>
+
+    <div class="callout callout-warn">
+      <strong>Corrected (2026-07-14).</strong> This page previously said a source pack feeds
+      "observation → alert → correlation → graph → temporal". <strong>That path was rejected by the
+      implementation.</strong> <code>AlertRecord</code> is a <em>triage</em> contract (score, score label,
+      a minimum-score filter, a publish gate) and a graph edge requires a <em>weight</em> — neither can
+      carry a fact without also asserting an opinion about it, so a source pack routed through them would
+      arrive already judged. Source packs enter the <strong>fact substrate</strong>. The
+      alert/correlation/graph path remains the <strong>legacy OSINT pipeline</strong>, untouched and
+      unrelated. See ADR-0008 (superseded in part) and ADR-0020.
+    </div>
+
+    <div class="callout callout-danger">
+      <strong>Reference-only rule.</strong> External repositories named by a capability-discovery
+      profile are never executed, never installed, never imported. Lighthouse reads <em>about</em> a
+      repository to produce observations; it does not run foreign code.
+    </div>
+
+    <h2>Gateway vs Lighthouse responsibility</h2>
+    <table>
+      <thead><tr><th>Responsibility</th><th>Owner</th></tr></thead>
+      <tbody>
+        <tr><td>Source-pack admission approval + audit</td><td>Gateway</td></tr>
+        <tr><td>Observation produced from an admitted pack</td><td>Lighthouse</td></tr>
+        <tr><td><strong>Fact</strong> derivation (normalization, identity, cross-scope)</td><td>Lighthouse (the one engine)</td></tr>
+        <tr><td><strong>Interpretation</strong> (candidates → hypotheses → findings)</td><td>Lighthouse, via <strong>profile-owned rules</strong> (ADR-0020)</td></tr>
+        <tr><td>Consequential approval / external release / disclosure packages</td><td>Gateway</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Where it fits</h2>
+    <p>Part of <strong>Phase D — Repository Intelligence</strong> in the
+    <a href="roadmap.html">roadmap</a>. <strong>External</strong> packs remain blocked on Gateway
+    source-pack admission and the live bridge (<a href="gateway-boundary.html">Gateway Boundary</a>);
+    <strong>local operator sources</strong> are a different class, need no admission, and already ship as
+    <code>lighthouse observe</code> (ADR-0019). When external ingestion is built it must reuse the
+    <strong>fact-substrate</strong> contracts — the observation model, the normalizer, and the three
+    fact-only tables — and must <em>not</em> be routed through <code>AlertRecord</code>/graph edges.</p>
+  </main>
+</div>
+<footer>
+  <span>Lighthouse — pattern-match-sentinel</span>
+  <a href="../REPOSITORY_SOURCE_PACKS.md">Source Packs doc</a>
+  <a href="../adr/0008-repository-source-packs-are-a-deterministic-observation-source.md">ADR-0008</a>
+  <span class="text-muted" style="margin-left:auto;">Static explainer — canonical source: Markdown docs</span>
+</footer>
+<script src="site.js"></script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gateway Boundary | Lighthouse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="site-title" href="index.html"><span class="beacon"></span> Lighthouse</a>
+  <span class="header-status">YELLOW — Operational</span>
+</header>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Start Here</span>
+      <a href="index.html">Home</a>
+      <a href="overview.html">What is Lighthouse?</a>
+      <a href="capabilities.html">Capabilities</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Using It</span>
+      <a href="day-to-day.html">Day-to-Day Usage</a>
+      <a href="operator.html">Operator Guide</a>
+      <a href="targets.html">Target Profiles</a>
+      <a href="start9.html">Start9 Deployment</a>
+      <a href="local-gateway.html">Local Gateway</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Understanding It</span>
+      <a href="signals.html">Signal Sources</a>
+      <a href="graph.html">Graph Intelligence</a>
+      <a href="profiles.html">Intelligence Profiles</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="gateway-boundary.html" class="active">Gateway Boundary</a>
+      <a href="source-packs.html">Repository Source Packs</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Security & Decisions</span>
+      <a href="security.html">Security</a>
+      <a href="adr.html">Architecture Decisions</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">For Developers</span>
+      <a href="developer.html">Developer Guide</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+  </nav>
+  <main>
+    <h1>Gateway / Lighthouse Boundary</h1>
+    <p class="page-intro">Lighthouse is the <strong>intelligence engine</strong>. The external Start9
+    Agent Gateway is a <strong>thin control, approval, policy, and audit plane</strong>. This page
+    summarizes who owns what. Canonical source:
+    <a href="../GATEWAY_LIGHTHOUSE_PROFILE_BOUNDARY.md"><code>docs/GATEWAY_LIGHTHOUSE_PROFILE_BOUNDARY.md</code></a>
+    (decision: <a href="adr.html">ADR-0001</a>).</p>
+
+    <div class="callout callout-warn">
+      Don't confuse the two "gateways." The in-repo <a href="local-gateway.html">Local Gateway</a>
+      (<code>modules/local_gateway.py</code>) is a bounded, read-only, loopback dispatch layer — a
+      different thing from the external <strong>Gateway</strong> control plane described here.
+    </div>
+
+    <h2>Who owns what</h2>
+    <table>
+      <thead><tr><th>Lighthouse owns (the engine)</th><th>Gateway owns (the control plane)</th></tr></thead>
+      <tbody>
+        <tr><td>Profile definitions, validation, (future) resolution + activation state</td><td>Operator review / approval surfaces</td></tr>
+        <tr><td>Intake validation, normalization, observation creation</td><td>Profile-switch authorization + audit trail</td></tr>
+        <tr><td>Graph, temporal / tempo derivation, correlation</td><td>Source-pack admission approval</td></tr>
+        <tr><td>(Future) candidate findings + disclosure-package preparation</td><td>(Future) DMS release policy</td></tr>
+        <tr><td>Backup-readiness evidence about its own state</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-info">
+      <strong>Invariant.</strong> The Gateway never executes Lighthouse work and never writes Lighthouse
+      data. A Gateway approval record is not authoritative approval state inside Lighthouse.
+    </div>
+
+    <h2>The live bridge is blocked</h2>
+    <p>A future read-only, evidence-stripped bridge would let the Gateway read profile state, backup
+    readiness, and recent findings from Lighthouse. It is <span class="status-planned">blocked</span>
+    until a separate approved packet exposes a private REST / <code>/local/*</code> surface from the
+    Start9 package — today only MCP-SSE on port 8001 is published. Until then the split stays
+    fixture-backed on the Gateway side. See <a href="adr.html">ADR-0010</a>.</p>
+
+    <h2>Related</h2>
+    <ul>
+      <li><a href="source-packs.html">Repository Source Packs</a> — admission (Gateway) vs observation (Lighthouse).</li>
+      <li><a href="security.html">Security</a> — the cross-repo approval defect and defense-in-depth.</li>
+      <li><a href="profiles.html">Intelligence Profiles</a> — declarative policy the Gateway authorizes switching for.</li>
+    </ul>
+  </main>
+</div>
+<footer>
+  <span>Lighthouse — pattern-match-sentinel</span>
+  <a href="../GATEWAY_LIGHTHOUSE_PROFILE_BOUNDARY.md">Boundary doc</a>
+  <a href="../adr/0001-lighthouse-owns-engine-gateway-is-control-plane.md">ADR-0001</a>
+  <span class="text-muted" style="margin-left:auto;">Static explainer — canonical source: Markdown docs</span>
+</footer>
+<script src="site.js"></script>
+</body>
+</html>

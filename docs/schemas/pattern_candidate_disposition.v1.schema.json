@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pattern_candidate_disposition.v1",
+  "title": "Lighthouse Pattern Candidate Disposition",
+  "description": "One local operator decision about one EXACT candidate version (LHP-INTEL-03B, ADR-0021). A disposition is NOT a finding, NOT a Gateway approval, and NOT authorization to publish or execute — and it has no field in which any of those could be written. 'accepted_for_followup' means 'this deserves more investigation', never 'this claim is true'. Records are append-only and bind to the candidate's artifact_digest, so a decision always names the exact evidence it was made against; when the evidence changes, the detector produces a NEW candidate version which may receive its own decision. Exactly ONE disposition per candidate version in v1, enforced by a UNIQUE index in the database rather than by a service-side check alone. Reopening and supersession are deliberately not implemented. This document is a human-facing reference mirror; the AUTHORITATIVE enforcer is modules/pattern_candidate.py (PatternDisposition.validate(), which RECOMPUTES artifact_digest).",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "disposition_id",
+    "candidate_id",
+    "candidate_artifact_digest",
+    "created_at",
+    "operator_id",
+    "decision",
+    "reason",
+    "review_method",
+    "operator_identity_authenticated",
+    "artifact_digest",
+    "digest_algorithm"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "disposition_id": {
+      "type": "string",
+      "pattern": "^pd_[0-9a-f]{64}$",
+      "description": "The artifact digest, typed. Derived, never supplied."
+    },
+    "candidate_id": {
+      "type": "string",
+      "pattern": "^pc_[0-9a-f]{64}$",
+      "description": "The exact candidate VERSION this decision is about."
+    },
+    "candidate_artifact_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "The candidate's content digest. Validation requires candidate_id == 'pc_' + this, so a decision cannot drift onto a different version of the evidence."
+    },
+    "created_at": {
+      "type": "string",
+      "description": "UTC ISO-8601. DIGEST-EXCLUDED, like the candidate's."
+    },
+    "operator_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Who decided. Required and non-empty — but see operator_identity_authenticated."
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["accepted_for_followup", "dismissed", "needs_more_evidence"],
+      "description": "A closed vocabulary with no verdict in it. There is deliberately no 'approved', 'verified', 'finding', 'published' or 'rejected_as_false'."
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Why, in the operator's own words. Required and non-empty: a decision with no reason is not reviewable later."
+    },
+    "review_method": { "type": "string", "enum": ["local_cli"] },
+    "operator_identity_authenticated": {
+      "type": "boolean",
+      "const": false,
+      "description": "We do not claim an authentication that does not exist. A CLI flag is a label, not an identity — and pinning the denial is more honest than omitting the field."
+    },
+    "artifact_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 over canonical JSON of every field EXCEPT disposition_id, created_at and artifact_digest itself."
+    },
+    "digest_algorithm": { "type": "string", "const": "sha256" }
+  }
+}

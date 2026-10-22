@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "profile_id": "repository_capability_discovery",
+  "profile_version": 2,
+  "display_name": "Repository Capability Discovery",
+  "description": "Observe approved local operator repositories and surface exact-content recurrence pattern candidates for operator review. Metadata-first; repositories are never executed or installed. A candidate is not a hypothesis, finding, or authority to publish or execute.",
+  "mission": "Map exact byte recurrence across approved local repositories as operator-reviewed pattern candidates via repository_exact_content_recurrence. Does not claim shared capability, source independence, novelty, or significance.",
+  "status": "ready_for_validation",
+  "compatibility": {
+    "min_schema_version": 1,
+    "requires_data_boundary": "/data"
+  },
+  "source_policy": {
+    "allowed_source_types": ["repository"],
+    "external_intake": false,
+    "requires_gateway_approval": false,
+    "external_repo_execution": false,
+    "external_repo_install": false
+  },
+  "collector_policy": {
+    "enabled_collectors": ["repository_intake"],
+    "disabled_collectors": ["nostr_publish", "dms_broadcast"]
+  },
+  "observation_policy": {
+    "content_tier": "metadata_only",
+    "raw_content": false,
+    "provenance_required": true
+  },
+  "graph_policy": {"enabled": true},
+  "correlation_policy": {"enabled": true},
+  "temporal_policy": {"enabled": true, "tempo_enabled": false},
+  "privacy_policy": {
+    "local_only": true,
+    "external_model_calls": false,
+    "raw_content_export": false
+  },
+  "publishing_policy": {
+    "public_publishing": false,
+    "disclosure_package": false
+  },
+  "backup_policy": {
+    "backup_required_on_activation": true,
+    "data_root": "/data"
+  },
+  "interface_policy": {
+    "local_gateway": true,
+    "mcp_read_only": true,
+    "gateway_display_only": true
+  },
+  "dead_mans_switch_policy": {"eligible": false},
+  "metadata": {
+    "owned_detector_id": "repository_exact_content_recurrence",
+    "owned_candidate_type": "repository_exact_content_recurrence",
+    "owned_rule_id": "exact_content_recurrence_across_repository_scopes",
+    "engine_migrated": true,
+    "is_hypothesis": false,
+    "is_finding": false,
+    "authorizes_execution": false,
+    "authorizes_publication": false,
+    "maturity_note": "RCD operator loop is proven (observe → content identity → exact-content recurrence candidates → disposition). ready_for_validation means ready for activation validation, not active or production-complete. Local foundation activation does not require Gateway approval (ADR-0019). External source packs remain out of scope. Shared factual storage under /data; no profile-specific relocation."
+  }
+}

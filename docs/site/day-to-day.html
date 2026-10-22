@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day-to-Day Usage | Lighthouse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="site-title" href="index.html"><span class="beacon"></span> Lighthouse</a>
+  <span class="header-status">YELLOW — Operational</span>
+</header>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Start Here</span>
+      <a href="index.html">Home</a>
+      <a href="overview.html">What is Lighthouse?</a>
+      <a href="capabilities.html">Capabilities</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Using It</span>
+      <a href="day-to-day.html" class="active">Day-to-Day Usage</a>
+      <a href="operator.html">Operator Guide</a>
+      <a href="targets.html">Target Profiles</a>
+      <a href="start9.html">Start9 Deployment</a>
+      <a href="local-gateway.html">Local Gateway</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Understanding It</span>
+      <a href="signals.html">Signal Sources</a>
+      <a href="graph.html">Graph Intelligence</a>
+      <a href="profiles.html">Intelligence Profiles</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="gateway-boundary.html">Gateway Boundary</a>
+      <a href="source-packs.html">Repository Source Packs</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Security & Decisions</span>
+      <a href="security.html">Security</a>
+      <a href="adr.html">Architecture Decisions</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">For Developers</span>
+      <a href="developer.html">Developer Guide</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+  </nav>
+  <main>
+    <h1>Day-to-Day Usage</h1>
+    <p class="page-intro">How an operator actually uses Lighthouse — from health checks to graph queries to production runs.</p>
+
+    <h2 id="health">Check System Health</h2>
+    <p>Always start here. This confirms the database, schema, keys, and recent activity are all in order.</p>
+    <pre>lighthouse status</pre>
+
+    <h2 id="targets">Review Your Targets</h2>
+    <p>See which target profiles are loaded and what signals each one activates. This is read-only and safe to run any time.</p>
+    <pre>lighthouse targets
+lighthouse targets --show-routes
+lighthouse targets --json</pre>
+    <p>The <code>--show-routes</code> flag shows which signals (SEC, ADSB, flight, arXiv, etc.) each target activates and what entities/keywords/regions are in scope.</p>
+
+    <h2 id="alerts">Review Recent Alerts</h2>
+    <p>Alerts are raw or semi-processed signals from individual collectors. They may include noise. Use them for debugging and to understand what each module is seeing.</p>
+    <pre># Last 20 alerts
+lighthouse alerts --limit 20
+
+# Filter by source
+lighthouse alerts --source sec_sentinel
+lighthouse alerts --source adsb_sentinel
+
+# Filter by score
+lighthouse alerts --min-score 0.75
+
+# Filter by entity
+lighthouse alerts --entity "Lockheed Martin"
+
+# Machine-readable output
+lighthouse alerts --limit 20 --json</pre>
+    <p>Alert labels: <code>high</code>, <code>medium</code>, <code>low</code>. High-label alerts are most worth reviewing.</p>
+
+    <h2 id="correlations">Review Correlations</h2>
+    <p>Correlations are more important than raw alerts. They represent multiple independent signals pointing at the same entity within a time window. This is the primary output surface.</p>
+    <pre>lighthouse correlations --limit 10
+lighthouse correlations --limit 10 --json</pre>
+
+    <div class="callout callout-info">
+      <strong>Correlations, not alerts, are the signal</strong>
+      A single alert is noise. A correlation with score ≥ 7.0 backed by 2+ independent signals is meaningful and may be published to Nostr.
+    </div>
+
+    <h2 id="callsigns">Check Callsign History</h2>
+    <p>Callsign observations are stored persistently. Use these to review aviation activity over time.</p>
+    <pre>lighthouse callsigns
+lighthouse callsigns --limit 20
+lighthouse callsigns --callsign PAT16
+lighthouse callsigns --callsign PAT16 --json</pre>
+    <p>Callsigns like PAT16, ZEUS31, MUSL, OTIS61 have been observed near DARPA HQ and Camp Lejeune. A callsign seen at the same facility on multiple separate runs is more significant than a one-time observation.</p>
+
+    <h2 id="temporal">Temporal Activity</h2>
+    <p>Query historical patterns across callsigns and facilities. These commands read from the <code>callsign_observations</code> table without affecting scores or the graph.</p>
+    <pre># Activity across all callsigns/facilities over the last 7 days
+lighthouse temporal --recent 7
+lighthouse temporal --recent 30 --json
+
+# Callsign-specific temporal history
+lighthouse temporal --callsign PAT16
+lighthouse temporal --callsign PAT16 --json
+
+# Facility activity summary
+lighthouse temporal --facility "DARPA HQ"</pre>
+    <p>Use this to answer: "How active has this callsign been in the last month?" or "Which facilities have had the most activity this week?"</p>
+
+    <h2 id="tempo">Operational Tempo</h2>
+    <p>Operational tempo analysis identifies recurring mission patterns — callsigns that appear repeatedly, on consistent days/times, at the same facilities. All deterministic, no ML.</p>
+    <pre># Find callsigns with recurring mission patterns
+lighthouse tempo --recurring
+lighthouse tempo --recurring --min-observations 5 --min-days 3
+
+# Callsign-specific tempo (interval stats, weekday/hour distribution)
+lighthouse tempo --callsign PAT16
+lighthouse tempo --callsign PAT16 --json
+
+# Facility operational cadence
+lighthouse tempo --facility "DARPA HQ"</pre>
+    <p>A callsign that appears every Tuesday and Thursday between 0800–1200 near the same facility is a qualitatively different signal than a one-time observation.</p>
+
+    <h2 id="graph">Investigate an Entity</h2>
+    <p>Graph traversal is the primary intelligence interface. Start with a known entity and explore what signals have touched it.</p>
+    <pre>lighthouse graph --entity "Lockheed Martin" --depth 2
+lighthouse graph --entity "DARPA" --depth 2 --json
+lighthouse graph --entity "MIT Lincoln Laboratory" --depth 2 --json</pre>
+    <p>Depth 2 means: show the entity, its immediate events/signals, and entities one hop beyond those. Higher depth values produce richer (and larger) output.</p>
+    <p>The graph grows as correlations accumulate. If queries return sparse results, run <a href="#backfill">graph backfill</a>.</p>
+
+    <h2 id="backfill">Graph Backfill</h2>
+    <p>Historical correlations may not have corresponding graph nodes if they were recorded before graph persistence was enabled (Packet 12). Backfill is idempotent — safe to run multiple times.</p>
+    <pre># Always dry-run first
+lighthouse graph-backfill --dry-run --limit 100
+
+# Then run live
+lighthouse graph-backfill --limit 100
+
+# Repeat with higher limit until count_seen is less than limit
+lighthouse graph-backfill --limit 500</pre>
+
+    <h2 id="targeted">Run in Targeted Mode</h2>
+    <p>Targeted mode reads <code>data/targets.json</code>, builds a routing plan, and runs only the signals enabled in your active target profiles. This is more efficient than running all modules and produces less noise.</p>
+    <pre>lighthouse --module targeted --dry-run --since-days 7
+lighthouse --module targeted --since-days 7</pre>
+
+    <h2 id="production">Standard Production Run</h2>
+    <p>The recommended production workflow:</p>
+    <pre># Step 1: Validate entities
+python scripts/validate_entities.py data/entities.json
+
+# Step 2: Run tests (without publishing credentials)
+env -u NOSTR_PRIVATE_KEY_HEX -u NOSTR_PUBLISH_CORRELATIONS pytest tests/unit -v --tb=short
+
+# Step 3: Dry-run first
+lighthouse --module all --dry-run --since-days 7
+
+# Step 4: Take a backup
+mkdir -p backups
+cp data/state.db backups/state-before-run-$(date +%Y%m%d-%H%M%S).db
+
+# Step 5: Live run with log capture
+mkdir -p logs
+lighthouse --module all --since-days 7 > logs/live-$(date +%Y%m%d-%H%M%S).log 2>&1</pre>
+
+    <p>Or use the production wrapper:</p>
+    <pre>scripts/run_lighthouse_prod.sh</pre>
+
+    <h2 id="logs">Reading Logs</h2>
+    <pre>tail -200 logs/live-*.log</pre>
+    <p>Look for:</p>
+    <ul>
+      <li>Module failures — each module runs in its own try/except, so one failure does not abort the rest</li>
+      <li>Rate limits — arXiv may return 429; this is non-blocking</li>
+      <li>Correlation count — how many events were scored this run</li>
+      <li>Nostr relay acceptance — whether published events were accepted</li>
+      <li>Zero publish events — normal when no correlation passes the 7.0 gate</li>
+    </ul>
+
+    <h2 id="rollback">Rollback</h2>
+    <p>If a run produces unexpected results, roll back the database:</p>
+    <pre>cp backups/&lt;backup-file&gt;.db data/state.db</pre>
+    <p>Also disable publishing before investigating:</p>
+    <pre>NOSTR_PUBLISH_CORRELATIONS=false lighthouse status</pre>
+
+    <h2 id="modules">Running Individual Modules</h2>
+    <p>For debugging or lightweight runs, target a single module:</p>
+    <pre>lighthouse --module sec --since-days 7
+lighthouse --module adsb --since-days 1
+lighthouse --module flight --since-days 1
+lighthouse --module arxiv --since-days 14</pre>
+
+    <p>Available module choices: <code>patents | velocity | arxiv | sec | archive | narrative | flight | adsb | nostr | targeted | all</code></p>
+
+    <div class="callout callout-warn">
+      <strong>Note on patent module</strong>
+      The patent provider is disabled by default. Running <code>--module patents</code> or <code>--module all</code> will skip patent collection without error. See <a href="signals.html">Signal Sources</a> for details.
+    </div>
+
+    <h2 id="observe">Observe Your Own Repositories and Documents</h2>
+    <p>Everything above watches the outside world. This watches <em>your</em> work — local git repositories and documents — and records what it finds as plain facts. Nothing here is scored, ranked, or interpreted.</p>
+    <p>Two declarations are required, and they are <strong>not</strong> interchangeable. <code>LIGHTHOUSE_OBSERVATION_ROOTS</code> is the trust boundary: it is empty by default, and empty means <code>observe</code> refuses rather than quietly trusting your whole filesystem. <code>data/observation_sources.json</code> is the work list — it can only <em>narrow</em> the roots, never widen them.</p>
+    <pre>export LIGHTHOUSE_OBSERVATION_ROOTS=/home/you/Projects   # the trust boundary
+
+# data/observation_sources.json — the work list (there is no default, and no seed file)
+# {"schema_version": 1, "sources": [
+#   {"type": "repository", "path": "/home/you/Projects/widget"},
+#   {"type": "document",   "path": "/home/you/Documents/spec.pdf"}
+# ]}
+
+lighthouse observe --dry-run    # observes and normalizes; writes NOTHING, not even the tables
+lighthouse observe              # persist (insert-only, idempotent by content identity)</pre>
+    <p>Observing never modifies the source. The repository tree — <code>.git/</code> included — is byte-identical afterwards, and that is a tested property rather than a promise.</p>
+
+    <h2 id="observations">Inspect What Was Recorded</h2>
+    <p>Read-only, and enforced as such by SQLite itself: these queries run on a <code>mode=ro</code> connection, so the store cannot be written through them even by mistake. An empty store answers <code>{"count": 0}</code>, exits 0, and creates no database.</p>
+    <pre>lighthouse observations list                 # every recorded observation, newest first
+lighthouse observations show --id 9f3c1ab2   # full digest, or an unambiguous >=8-char prefix
+lighthouse observations search --scope-type repository
+lighthouse observations search --sensor git_metadata     # filesystem | git_metadata | text_extractor
+lighthouse observations stats                # counts only, ordered by name — never by count</pre>
+    <p><code>--sensor</code> is the real provenance: the sensor that established a fact, read verbatim from the stored artifact. A repository is the <em>subject</em> of an observation, not a sensor — so there is no <code>--source</code> flag.</p>
+
+    <h2 id="cross-scope">Ask Where Else</h2>
+    <p>The question the fact store was built to answer: <em>where else have I built this?</em> Both commands perform exact lookup and direct set intersection over facts that are already stored. Neither ranks, infers, scores, or interprets anything.</p>
+    <pre># Every scope in which one exact entity was directly observed
+lighthouse observations where --entity-id technology:docker
+lighthouse observations where --entity-id language:Python --json
+
+# The exact entities observed in EVERY requested scope (intersection, never union)
+lighthouse observations shared --scope-id &lt;A&gt; --scope-id &lt;B&gt;
+lighthouse observations shared --scope-id &lt;A&gt; --scope-id &lt;B&gt; --scope-id &lt;C&gt; --json
+
+# "Which of my projects contain these EXACT bytes?"  (no new command — a new entity type)
+lighthouse observations where --entity-id content:&lt;sha256-of-the-raw-bytes&gt;</pre>
+    <p>Entity ids are <strong>exact</strong> — <code>technology:docker</code>, <code>language:Python</code>, <code>remote:&lt;url&gt;</code> are not digests, so they have no prefix form. Scope ids <em>are</em> digests, so they accept an unambiguous prefix of at least 8 hex characters (<code>observations list</code> prints them). An unknown entity is an empty result and exit 0; an unknown <em>scope</em> is an error — reporting an empty intersection would claim "these two share nothing" about a repository that was never observed.</p>
+
+    <div class="callout callout-info">
+      <strong>Two repositories with a Dockerfile do not share the <em>file</em> — they share the <em>technology</em>, and (if the bytes match exactly) the <em>content</em></strong>
+      A <code>file:</code> id embeds the scope it was found in, so <code>file:&lt;A&gt;:Dockerfile</code> and <code>file:&lt;B&gt;:Dockerfile</code> are different entities by construction — that has not changed. What they join on is <code>technology:docker</code>, and, since <code>LHP-INTEL-03A</code>, <code>content:&lt;sha256&gt;</code> whenever the two files are byte-for-byte identical. By the same design, <code>repository:</code> and <code>document:</code> ids cross scopes too: a document is identified by the digest of its <strong>bytes</strong>, so the same file saved in two places is one entity observed twice.
+    </div>
+
+    <h2 id="content-identity">Exact File Content</h2>
+    <p><code>content:&lt;sha256&gt;</code> is <code>SHA-256</code> over a file's <strong>exact raw bytes</strong>, and nothing else — not the path, not the name, not the mode, not the timestamps, not decoded text, not normalized line endings, and <strong>not git's blob SHA-1</strong> (which hashes a header <em>before</em> the bytes, so it could never match a loose file's digest). A <strong>rename</strong> keeps the identity; <strong>one changed byte</strong> replaces it. Because a standalone document is identified by its bytes too, a repository file and a document holding the same bytes are <strong>one entity with two occurrences</strong>.</p>
+    <p>Only <strong>tracked</strong> files are read. Untracked and ignored files are never opened, symlinks are never followed, submodules are never recursed into, and a file that changes while it is being read produces <strong>no digest at all</strong>. Every tracked path still gets an accounted outcome — <code>hashed</code>, <code>missing</code>, <code>unreadable</code>, <code>too_large</code>, <code>aggregate_limit_exceeded</code>, <code>symlink_unsupported</code>, <code>gitlink_unsupported</code>, <code>special_file_rejected</code>, <code>changed_during_read</code>, <code>invalid_path</code> — and only <code>hashed</code> may carry a digest.</p>
+
+    <div class="callout callout-warn">
+      <strong>Identical bytes mean identical bytes. Nothing else.</strong>
+      Two of your projects containing the same <code>Dockerfile</code> is a <em>fact</em>. It does not say the file was copied, which copy came first, who wrote it, whether two implementations were independent, or that any of it matters. Before treating a content inventory as complete evidence, check <code>content.coverage.complete</code>: above 5,000 tracked files the inventory is <strong>withheld entirely</strong> rather than truncated, because a truncated list reads exactly like a complete one.
+    </div>
+
+    <h2 id="patterns">Review Pattern Candidates</h2>
+    <p>The first surface that shows you something other than a raw fact. It runs <strong>one</strong> deterministic rule that a profile declared in advance — <em>the same exact bytes appear in at least two distinct repository scopes</em> — and lets you record one local decision about what it found. It does not score, rank, promote, publish, execute, or activate a profile.</p>
+    <pre>lighthouse patterns detect --dry-run --json   # writes NOTHING — not a row, not a table, not the DB file
+lighthouse patterns detect                   # persist (insert-only, idempotent by content identity)
+lighthouse patterns list                     # latest version per candidate, with its decision if any
+lighthouse patterns list --all-versions --json
+lighthouse patterns show --id 9f3c1ab2       # full pc_&lt;sha256&gt;, or an unambiguous &gt;=8-char hex prefix
+lighthouse patterns review --id 9f3c1ab2 --operator-id operator \
+    --decision needs_more_evidence --reason "Repository lineage has not been assessed."</pre>
+    <p>Three decisions, and the vocabulary is closed: <code>accepted_for_followup</code> (<em>"worth more investigation"</em> — never <em>"true"</em>), <code>dismissed</code>, <code>needs_more_evidence</code>. There is deliberately no <code>approved</code>, <code>verified</code>, <code>finding</code> or <code>published</code>. <strong>One decision per candidate version</strong>, bound to the exact evidence digest; when the evidence changes the detector produces a <strong>new version</strong> to review, and your earlier decision is never touched.</p>
+
+    <div class="callout callout-warn">
+      <strong>A candidate is not a finding.</strong>
+      It says <em>"these direct facts satisfy one declared review rule; look at this"</em> — and it has no field in which it could say more. It does <strong>not</strong> say the files were copied, that one project derived from another, that anything was independently invented, reusable, novel, patentable, or important. For a solo operator reusing their own boilerplate, the dominant explanation for identical bytes is a clone, a fork, a template, a generated file or a vendored copy — <strong>the detector cannot tell those apart, so it says so</strong> on every candidate. <code>source_independence_not_assessed</code> is mandatory. Reviewing a candidate is a private note to yourself: it creates no finding, contacts no Gateway, publishes nothing, and authorizes nothing.
+    </div>
+
+    <h2 id="public-sources">Check Public Sources</h2>
+    <p>Record whether Lighthouse could fetch an admitted public locator, when, and what directly happened &mdash; an append-only history through one hardened HTTPS chokepoint. Set the allowlist first (empty refuses); the targets file may only narrow it.</p>
+    <pre>export LIGHTHOUSE_PUBLIC_SOURCE_HOSTS=archive.example.org,data.example.edu   # empty =&gt; refuses
+lighthouse public-sources check --targets-file data/public_source_targets.json --dry-run   # writes NOTHING
+lighthouse public-sources check --targets-file data/public_source_targets.json             # persist (append-only)
+lighthouse public-sources runs
+lighthouse public-sources history --content-digest &lt;sha256&gt;
+lighthouse public-sources show --id psc_&lt;sha256&gt;</pre>
+    <p>A <code>not_found</code> is HTTP 404/410, never a claim that a source is gone; a timeout or TLS failure is not an absence. The exact-byte digest (<code>content:&lt;sha256&gt;</code>) joins to repository and document content identity, but the response body is never stored. No candidate is created (ADR-0022).</p>
+
+    <h2 id="local-gateway">Local Gateway</h2>
+    <p>When the portal is running, the local intelligence gateway provides structured JSON access to intelligence data for scripts and local agents — no shell access required.</p>
+    <pre># Health check
+curl http://127.0.0.1:8080/local/health
+
+# Daily intelligence brief (correlations + callsigns + graph snapshot)
+curl -s -X POST http://127.0.0.1:8080/local/request \
+  -H "Content-Type: application/json" \
+  -d '{"method": "intelligence.daily_brief", "params": {}}'</pre>
+    <p>See <a href="local-gateway.html">Local Gateway</a> for all five methods and Start9 usage.</p>
+  </main>
+</div>
+<footer>
+  <span>Lighthouse — pattern-match-sentinel</span>
+  <a href="../FUTURE_PLAN.md">Future Plan</a>
+  <a href="../ROADMAP_STATUS.md">Roadmap Status</a>
+  <a href="../OPERATIONS.md">Operations SOP</a>
+</footer>
+<script src="site.js"></script>
+</body>
+</html>

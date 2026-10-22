@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lighthouse_restore_drill.v1",
+  "title": "Lighthouse Restore Drill Report",
+  "description": "Typed output of lighthouse restore-drill / restore_drill(). Binds to the exact manifest.json file bytes via manifest_sha256. artifact_digest is SHA-256 over canonical JSON of every field except itself (same recipe as active_profile_state.v1). Authority pins production_restore_performed and profile_activation_authorized are identity-checked false. This document is a human/Gateway-facing reference mirror; the AUTHORITATIVE enforcer is modules/backup_verify.py (RestoreDrillReport.validate()).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_schema",
+    "schema_version",
+    "status",
+    "backup_root",
+    "restore_destination",
+    "manifest_id",
+    "manifest_sha256",
+    "manifest_valid",
+    "payload_verified",
+    "files_restored",
+    "restored_digests_verified",
+    "sqlite_integrity_verified",
+    "source_unchanged",
+    "production_restore_performed",
+    "profile_activation_authorized",
+    "blocking_failures",
+    "warnings",
+    "unproven_guarantees",
+    "note",
+    "artifact_digest"
+  ],
+  "properties": {
+    "report_schema": { "const": "lighthouse_restore_drill.v1" },
+    "schema_version": { "type": "integer", "const": 1 },
+    "status": { "type": "string", "enum": ["completed", "failed"] },
+    "backup_root": { "type": "string", "minLength": 1 },
+    "restore_destination": { "type": "string", "minLength": 1 },
+    "manifest_id": { "type": "string", "minLength": 1 },
+    "manifest_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the exact manifest.json file bytes, not a canonical JSON digest."
+    },
+    "manifest_valid": { "type": "boolean" },
+    "payload_verified": { "type": "boolean" },
+    "files_restored": { "type": "integer" },
+    "restored_digests_verified": { "type": "boolean" },
+    "sqlite_integrity_verified": { "type": "boolean" },
+    "source_unchanged": { "type": "boolean" },
+    "production_restore_performed": { "const": false },
+    "profile_activation_authorized": { "const": false },
+    "blocking_failures": { "type": "array", "items": { "type": "string" } },
+    "warnings": { "type": "array", "items": { "type": "string" } },
+    "unproven_guarantees": { "type": "array", "items": { "type": "string" } },
+    "note": { "type": "string", "minLength": 1 },
+    "artifact_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Canonical report-content digest. Excludes only itself."
+    }
+  }
+}

@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements-dev.lock
+      - run: ruff check .
+      - run: ruff format --check .
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements-dev.lock
+      - run: pip install --no-deps -e .
+      - run: playwright install chromium --with-deps
+      - run: python -m pytest tests/unit -v --tb=short
+
+  docker-smoke:
+    name: Docker Smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t pattern-match-sentinel:test .
+      - run: docker run --rm pattern-match-sentinel:test python -c "import main; print('main import ok')"
+      - run: docker run --rm pattern-match-sentinel:test python -c "import config; print('config import ok')"
+      - run: docker run --rm pattern-match-sentinel:test lighthouse --help

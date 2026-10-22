@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "researchers": [
+    {
+      "name": "Synthetic Researcher A",
+      "institution": "Synthetic Fusion Plasma Institute",
+      "arxiv_query": "au:\"Synthetic_A\""
+    },
+    {
+      "name": "Synthetic Researcher B",
+      "institution": "Synthetic Fusion Plasma Institute",
+      "arxiv_query": "au:\"Synthetic_B\""
+    },
+    {
+      "name": "Synthetic Researcher C",
+      "institution": "Synthetic Fusion Plasma Institute",
+      "arxiv_query": "au:\"Synthetic_C\""
+    },
+    {
+      "name": "Synthetic Researcher D",
+      "institution": "Synthetic Fusion Plasma Institute",
+      "arxiv_query": "au:\"Synthetic_D\""
+    },
+    {
+      "name": "Synthetic Researcher E",
+      "institution": "Synthetic Fusion Plasma Institute",
+      "arxiv_query": "au:\"Synthetic_E\""
+    },
+    {
+      "name": "Synthetic Researcher F",
+      "institution": "Synthetic Inertial Confinement Laboratory",
+      "arxiv_query": "au:\"Synthetic_F\""
+    },
+    {
+      "name": "Synthetic Researcher G",
+      "institution": "Synthetic Inertial Confinement Laboratory",
+      "arxiv_query": "au:\"Synthetic_G\""
+    },
+    {
+      "name": "Synthetic Researcher H",
+      "institution": "Synthetic Inertial Confinement Laboratory",
+      "arxiv_query": "au:\"Synthetic_H\""
+    },
+    {
+      "name": "Synthetic Researcher I",
+      "institution": "Synthetic Inertial Confinement Laboratory",
+      "arxiv_query": "au:\"Synthetic_I\""
+    },
+    {
+      "name": "Synthetic Researcher J",
+      "institution": "Synthetic Inertial Confinement Laboratory",
+      "arxiv_query": "au:\"Synthetic_J\""
+    }
+  ]
+}

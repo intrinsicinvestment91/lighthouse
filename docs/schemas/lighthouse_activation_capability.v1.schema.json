@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/lighthouse/docs/schemas/lighthouse_activation_capability.v1.schema.json",
+  "title": "lighthouse_activation_capability.v1",
+  "description": "Lighthouse's self-description of the profile-activation capability it would provide. A PROVIDER SELF-DESCRIPTION — not a Gateway capability definition (which owns trust floors, freshness windows, lifecycle status and repo_audit_status) and not an attestation (which the Gateway issues). Reference mirror only: the authoritative enforcer is ActivationCapabilityDescriptor.validate() in modules/activation_capability.py. Nothing in this contract activates, switches, stores, or executes anything (LHP-PROFILE-14C, ADR-0017).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "capability_id",
+    "capability_version",
+    "provider_type",
+    "provider_id",
+    "provider_version",
+    "provider_commit",
+    "implementation_state",
+    "activation_available",
+    "declared_operations",
+    "contract_references",
+    "required_evidence",
+    "limitations",
+    "security_constraints",
+    "artifact_digest"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Contract version. Unknown or future versions are rejected (fail closed).",
+      "type": "integer",
+      "const": 1
+    },
+    "capability_id": {
+      "description": "The Lighthouse-side umbrella id for the activation surface. NOT a Gateway capability id — those are per-operation (see declared_operations.gateway_capability_id).",
+      "type": "string",
+      "const": "lighthouse.profile_activation"
+    },
+    "capability_version": {
+      "description": "Provider-side capability revision. A future Gateway attestation joins on (capability_id, capability_version).",
+      "type": "integer",
+      "minimum": 1
+    },
+    "provider_type": {
+      "description": "Provider class, in the Gateway's vocabulary (its attestation provider_type / definition owning_component).",
+      "type": "string",
+      "const": "lighthouse"
+    },
+    "provider_id": {
+      "description": "Provider identity. Equals the value the Gateway pins as EXPECTED_LIGHTHOUSE_REPOSITORY and expects in an attestation's provider_id / provider_repository.",
+      "type": "string",
+      "const": "pattern-match-sentinel"
+    },
+    "provider_version": {
+      "description": "Best-effort installed version of the pattern-match-sentinel distribution; null in deployed images (honest, not an error).",
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "provider_commit": {
+      "description": "Best-effort git HEAD of this checkout; null in deployed images (which ship without a repository).",
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "implementation_state": {
+      "description": "CLOSED STATE VOCABULARY — the packet's activation_available = false, expressed as a state rather than a flippable boolean. v1 has exactly one member: nothing is implemented. Claiming availability requires a new contract member landing WITH the capability, never a value edit; 'available' is rejected even when the digest is re-stamped to match.",
+      "type": "string",
+      "enum": ["not_implemented"]
+    },
+    "activation_available": {
+      "description": "Digest-covered constant, checked by IDENTITY (true / 1 / 'false' / null all fail). A descriptor describes a capability; it never makes one available. This is the refusal hook for a future Gateway authorization packet, mirroring the Gateway's own Literal[False] pins.",
+      "type": "boolean",
+      "const": false
+    },
+    "declared_operations": {
+      "description": "The operations this capability WOULD provide. Each maps 1:1 onto a canonical Gateway capability id and mirrors that definition's mutating_capability / required_inputs / guaranteed_outputs, so a future attestation can cross-check the claim against the definition it attests to.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation_id",
+          "gateway_capability_id",
+          "implementation_state",
+          "mutates_state",
+          "required_inputs",
+          "produced_outputs"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "enum": ["request_activation", "record_active_profile", "validate_post_switch"]
+          },
+          "gateway_capability_id": {
+            "description": "Canonical Gateway capability id, verbatim. The `_endpoint` suffix is load-bearing: the bare 'lighthouse.profile_activation' exists nowhere in the Gateway registry. All three carry repo_audit_status='missing' there.",
+            "type": "string",
+            "enum": [
+              "lighthouse.profile_activation_endpoint",
+              "lighthouse.active_profile_store",
+              "lighthouse.post_switch_validation"
+            ]
+          },
+          "implementation_state": {
+            "type": "string",
+            "enum": ["not_implemented"]
+          },
+          "mutates_state": {
+            "description": "Mirrors the Gateway definition's mutating_capability.",
+            "type": "boolean"
+          },
+          "required_inputs": {
+            "description": "Mirrors the Gateway definition's required_inputs.",
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "produced_outputs": {
+            "description": "Mirrors the Gateway definition's guaranteed_outputs. An output with no matching contract_references role is a machine-discoverable gap: activation_result and validation_report have no Lighthouse contract yet.",
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "contract_references": {
+      "description": "The versioned Lighthouse contracts an activation would exchange — referenced, never executed. Schema versions are checked against the live imported constants, so a contract bump that forgets this descriptor fails validation instead of shipping a stale claim.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["contract", "schema_version", "role"],
+        "properties": {
+          "contract": {
+            "type": "string",
+            "enum": [
+              "profile_transition_preview.v1",
+              "activation_intent.v1",
+              "active_profile_state.v1"
+            ]
+          },
+          "schema_version": { "type": "integer", "minimum": 1 },
+          "role": {
+            "description": "Named for the Gateway input/output it satisfies: review_artifact (the preview under review), transition_reference (the activation endpoint's required input), active_profile_record (the active-profile store's guaranteed output).",
+            "type": "string",
+            "enum": ["review_artifact", "transition_reference", "active_profile_record"]
+          }
+        }
+      }
+    },
+    "required_evidence": {
+      "description": "What the capability would demand before it would act. Mirrors the gates the shipped activation-preconditions evaluator already enforces (LHP-PROFILE-14B).",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "verified_backup_manifest",
+          "passing_backup_verification_report",
+          "completed_restore_drill",
+          "ready_transition_preview",
+          "ready_activation_intent"
+        ]
+      }
+    },
+    "limitations": {
+      "description": "What the capability cannot do — starting with 'exist'. A future Gateway attestation carries these as its bounded `restrictions` (<=16 entries of <=256 chars).",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "maxLength": 256,
+        "enum": [
+          "activation_not_implemented",
+          "no_activation_endpoint_exists",
+          "no_active_profile_store_exists",
+          "no_post_switch_validation_exists",
+          "production_restore_not_provided",
+          "restore_drill_proves_isolated_restore_only",
+          "no_rollback_target_until_activation_exists"
+        ]
+      }
+    },
+    "security_constraints": {
+      "description": "Invariants any future activation must preserve. Each maps to a shipped Lighthouse enforcement and to a Gateway definition token; a future authorization packet must refuse to authorize a transition that violates one.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "operator_approved_transition_required",
+          "exactly_one_active_profile",
+          "single_activation_request_no_blind_retry",
+          "fail_closed_on_ambiguous_state",
+          "verified_backup_required_before_activation",
+          "intent_and_approval_never_authorize_activation"
+        ]
+      }
+    },
+    "artifact_digest": {
+      "description": "SHA-256 over the canonical descriptor content (sorted keys, compact separators), excluding only itself. RECOMPUTED by validate() — Lighthouse owns this artifact end to end (unlike the transition preview, whose digest the Gateway trusts and never recomputes). The descriptor carries no volatile fields, so equivalent builds produce an identical digest. A future attestation would carry it as evidence_reference 'lighthouse_activation_capability.v1:<capability_id>:<digest>'.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

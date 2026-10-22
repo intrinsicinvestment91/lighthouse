@@ -1,0 +1,74 @@
+[
+  {
+    "name": "Lockheed Martin",
+    "sec_cik": "0000936395",
+    "assignee_patterns": ["Lockheed Martin", "Lockheed"],
+    "facilities": ["DARPA HQ"],
+    "ipc_classes": ["B64G", "C22C"],
+    "region": "Bethesda, MD"
+  },
+  {
+    "name": "Helion Energy",
+    "sec_cik": "0001615940",
+    "assignee_patterns": ["Helion"],
+    "facilities": ["Helion Everett"],
+    "ipc_classes": ["G21B"],
+    "region": "Everett, WA"
+  },
+  {
+    "name": "Commonwealth Fusion Systems",
+    "sec_cik": "0001744079",
+    "assignee_patterns": ["Commonwealth Fusion", "CFS"],
+    "facilities": ["Commonwealth Fusion (SPARC)"],
+    "ipc_classes": ["G21B"],
+    "region": "Devens, MA"
+  },
+  {
+    "name": "General Atomics",
+    "sec_cik": "0001034584",
+    "assignee_patterns": ["General Atomics"],
+    "facilities": ["NIF (LLNL)"],
+    "ipc_classes": ["G21B", "C22C"],
+    "region": "San Diego, CA"
+  },
+  {
+    "name": "TAE Technologies",
+    "sec_cik": "0001175549",
+    "assignee_patterns": ["TAE Technologies", "Tri Alpha Energy"],
+    "facilities": ["NIF (LLNL)"],
+    "ipc_classes": ["G21B"],
+    "region": "Foothill Ranch, CA"
+  },
+  {
+    "name": "Aerojet Rocketdyne",
+    "sec_cik": "0000796343",
+    "assignee_patterns": ["Aerojet", "Rocketdyne"],
+    "facilities": ["DARPA HQ"],
+    "ipc_classes": ["B64G"],
+    "region": "Sacramento, CA"
+  },
+  {
+    "name": "MIT Lincoln Laboratory",
+    "sec_cik": "0000351051",
+    "assignee_patterns": ["MIT", "Massachusetts Institute of Technology"],
+    "facilities": ["Commonwealth Fusion (SPARC)", "DARPA HQ"],
+    "ipc_classes": ["G21B", "B64G", "C22C"],
+    "region": "Lexington, MA"
+  },
+  {
+    "name": "JPL",
+    "sec_cik": "0001377486",
+    "assignee_patterns": ["JPL", "Jet Propulsion Laboratory", "California Institute of Technology"],
+    "facilities": ["NIF (LLNL)"],
+    "ipc_classes": ["B64G"],
+    "region": "Pasadena, CA"
+  },
+  {
+    "name": "Lawrence Livermore National Laboratory",
+    "sec_cik": "0000315054",
+    "assignee_patterns": ["LLNL", "Lawrence Livermore", "Lawrence Livermore National"],
+    "facilities": ["NIF (LLNL)"],
+    "ipc_classes": ["G21B", "C22C"],
+    "region": "Livermore, CA"
+  }
+]

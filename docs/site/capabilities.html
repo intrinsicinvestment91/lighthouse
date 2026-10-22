@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capabilities | Lighthouse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="site-title" href="index.html"><span class="beacon"></span> Lighthouse</a>
+  <span class="header-status">YELLOW — Operational</span>
+</header>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Start Here</span>
+      <a href="index.html">Home</a>
+      <a href="overview.html">What is Lighthouse?</a>
+      <a href="capabilities.html" class="active">Capabilities</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Using It</span>
+      <a href="day-to-day.html">Day-to-Day Usage</a>
+      <a href="operator.html">Operator Guide</a>
+      <a href="targets.html">Target Profiles</a>
+      <a href="start9.html">Start9 Deployment</a>
+      <a href="local-gateway.html">Local Gateway</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Understanding It</span>
+      <a href="signals.html">Signal Sources</a>
+      <a href="graph.html">Graph Intelligence</a>
+      <a href="profiles.html">Intelligence Profiles</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="gateway-boundary.html">Gateway Boundary</a>
+      <a href="source-packs.html">Repository Source Packs</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Security & Decisions</span>
+      <a href="security.html">Security</a>
+      <a href="adr.html">Architecture Decisions</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">For Developers</span>
+      <a href="developer.html">Developer Guide</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+  </nav>
+  <main>
+    <h1>Capabilities</h1>
+    <p class="page-intro">The easiest page to understand — what Lighthouse can actually do today, in plain English, with an honest status on every capability. Canonical source: <a href="../CAPABILITIES.md">CAPABILITIES.md</a>.</p>
+
+    <div class="callout callout-info">
+      <strong>How to read the status labels</strong>
+      ✅ Implemented · 🧩 Partial · 🧪 Experimental · ⚙️ Foundation only (does not run yet) · 🚧 Blocked (deliberately) · 🔭 Planned. Repository evidence always overrides historical planning.
+    </div>
+
+    <h2>What Lighthouse Is</h2>
+    <p>Lighthouse (git repository <code>pattern-match-sentinel</code>) is a <strong>persistent, private, local-first intelligence platform</strong>. It watches public information — SEC filings, military aviation transponder feeds, research publications, government newsrooms — normalizes each observation into a scored alert, finds moments where several independent signals point at the same organization at the same time, and records those moments as structured, queryable intelligence.</p>
+    <ul>
+      <li><strong>Local-first</strong> — designed to run on a Start9 home server; your intelligence never has to leave your machine.</li>
+      <li><strong>Deterministic</strong> — the core pipeline is ordinary code, not a language model. Same inputs, same outputs, every finding explainable (<a href="adr.html">ADR-0009</a>).</li>
+      <li><strong>Graph-native</strong> — every correlation becomes nodes and edges, so intelligence compounds over time.</li>
+      <li><strong>Start9-integrated</strong> — packaged for a private, self-hosted home server with persistent storage and backups.</li>
+    </ul>
+
+    <h2>The Deterministic Pipeline</h2>
+    <div class="pipeline">
+      <span class="pipeline-step">Observation</span>
+      <span class="pipeline-arrow">→</span>
+      <span class="pipeline-step">Normalization</span>
+      <span class="pipeline-arrow">→</span>
+      <span class="pipeline-step">Store</span>
+      <span class="pipeline-arrow">→</span>
+      <span class="pipeline-step">Correlation</span>
+      <span class="pipeline-arrow">→</span>
+      <span class="pipeline-step">Graph</span>
+      <span class="pipeline-arrow">→</span>
+      <span class="pipeline-step">Temporal</span>
+      <span class="pipeline-arrow">→</span>
+      <span class="pipeline-step">Findings</span>
+      <span class="pipeline-arrow">→</span>
+      <span class="pipeline-step">Operator Review</span>
+      <span class="pipeline-arrow">→</span>
+      <span class="pipeline-step">Gateway</span>
+      <span class="pipeline-arrow">→</span>
+      <span class="pipeline-step">Approved Action</span>
+    </div>
+    <p>The first seven stages run today and are deterministic. The last two are governed: publishing is gated and safe-by-default, and the Gateway boundary is defined but the live bridge is blocked (<a href="adr.html">ADR-0010</a>).</p>
+
+    <h2>Core Capabilities</h2>
+    <div class="card-grid">
+      <div class="card">
+        <p class="card-title">Observation Collection <span class="status-live">Live</span></p>
+        <p class="card-body">Watches SEC, ADSB/OpenSky, arXiv, and government newsrooms. Each collector is fault-isolated so one failure never stops the others. Modules: <code>*_sentinel.py</code>, <code>flight_tracker.py</code>.</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Observation Normalization <span class="status-live">Live</span></p>
+        <p class="card-body">Every observation becomes one canonical, scored, provenance-stamped <code>AlertRecord</code>. Modules: <code>alerts.py</code>, <code>scoring.py</code>, <code>db.py</code>.</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Weighted Correlation <span class="status-live">Live</span></p>
+        <p class="card-body">Combines independent signals on the same entity/time window, scored 1–10. The publishable unit. Modules: <code>correlator.py</code>, <code>correlation_scoring.py</code>.</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Witness Attestation <span class="status-live">Live</span></p>
+        <p class="card-body">Each stored correlation carries a SHA-256 witness hash; signed attestations are not yet produced in the production path (the BIP-340 helper is demonstration/test-only). Module: <code>witness.py</code>.</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Graph Intelligence <span class="status-live">Live</span></p>
+        <p class="card-body">Correlations become queryable nodes and edges; idempotent historical backfill. Modules: <code>graph*.py</code>. See <a href="graph.html">Graph Intelligence</a>.</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Callsign Intelligence <span class="status-live">Live</span></p>
+        <p class="card-body">Normalizes and classifies callsigns, persists sighting history, and makes callsigns graph entities. Module: <code>callsigns.py</code>.</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Temporal &amp; Tempo <span class="status-live">Live</span></p>
+        <p class="card-body">Recurrence, activity windows, operational tempo, mission recurrence — informational today. Modules: <code>temporal_analysis.py</code>, <code>tempo_analysis.py</code>.</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Local MCP Interface <span class="status-live">Live</span></p>
+        <p class="card-body">Bounded, read-only queries for tools and AI agents; a private loopback dispatch layer. Modules: <code>portal/mcp_server.py</code>, <code>local_gateway.py</code>.</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Backup Readiness, Verified Backup &amp; Restore Drill <span class="status-live">Live</span></p>
+        <p class="card-body">Fail-closed check that authoritative state sits inside the <code>/data</code> boundary (<em>READY ≠ backup performed</em>), plus a versioned backup manifest, verified backup copy, independent verification, and an isolated restore drill: <code>backup-readiness</code> · <code>backup-manifest</code> · <code>backup-create</code> · <code>backup-verify</code> · <code>restore-drill</code>. SHA-256 + safe SQLite online-backup snapshots; writes only to explicit destinations; a restore drill never targets <code>/data</code>. Modules: <code>backup_readiness.py</code>, <code>backup_manifest.py</code>, <code>backup_create.py</code>, <code>backup_verify.py</code>. <strong>A completed backup or drill never authorizes a profile switch, and a drill is not a production restore</strong> (planned/separate).</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Profile Transition Preview <span class="status-live">Live</span></p>
+        <p class="card-body">A deterministic, read-only <em>review artifact</em> (<code>profile_transition_preview.v1</code>; <code>profile-transition-preview</code>): given a proposed profile transition and verified backup evidence, it describes the declarative policy diff, references the LHP-PROFILE-02 evidence (status only), and names the approvals a future Gateway must collect. Fail-closed — <code>ready_for_review</code> only with two valid profiles and present, passing evidence; else <code>incomplete</code>/<code>blocked</code>/<code>invalid</code>. Module: <code>profile_transition.py</code>. <strong>It activates nothing, switches nothing, and approves nothing</strong> — approval authority remains a future Gateway capability.</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Intelligence Profiles <span class="status-optional">Declarative + RCD v2 activation</span></p>
+        <p class="card-body">Declarative mission bundles (data, not plugins); five bundled profile seeds, none production-ready. Narrow initial activation is shipped for <code>repository_capability_discovery</code> v2 only (<code>lighthouse profile-activate</code>). Switching, deactivation, and every other profile remain unimplemented. See <a href="profiles.html">Profiles</a>.</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Repository Source Packs <span class="status-planned">Architecture-only</span></p>
+        <p class="card-body">Public repos as reference-only observations — never a second engine, never executed. See <a href="source-packs.html">Source Packs</a>.</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Gateway Integration <span class="status-planned">Blocked</span></p>
+        <p class="card-body">External control plane (approval/policy/audit). Boundary defined; live bridge blocked. See <a href="gateway-boundary.html">Gateway Boundary</a>.</p>
+      </div>
+    </div>
+
+    <h2>Capability Matrix</h2>
+    <table>
+      <thead>
+        <tr><th>Capability</th><th>Status</th><th>Primary module</th><th>Future phase</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Signal collection</td><td><span class="status-live">Live</span> (some degraded)</td><td><code>*_sentinel.py</code>, <code>flight_tracker.py</code></td><td>—</td></tr>
+        <tr><td>Patent collection</td><td><span class="status-degraded">Disabled (graceful)</span></td><td><code>patent_sentinel.py</code></td><td>—</td></tr>
+        <tr><td>Alert normalization</td><td><span class="status-live">Live</span></td><td><code>alerts.py</code>, <code>scoring.py</code></td><td>—</td></tr>
+        <tr><td>Correlation + scoring</td><td><span class="status-live">Live</span></td><td><code>correlator.py</code></td><td>time-aware scoring</td></tr>
+        <tr><td>Witness attestation</td><td><span class="status-live">Live</span></td><td><code>witness.py</code></td><td>—</td></tr>
+        <tr><td>Graph intelligence</td><td><span class="status-live">Live</span></td><td><code>graph*.py</code></td><td>temporal edges</td></tr>
+        <tr><td>Callsign intelligence</td><td><span class="status-live">Live</span></td><td><code>callsigns.py</code></td><td>scoring weight</td></tr>
+        <tr><td>Temporal / tempo</td><td><span class="status-live">Live</span> (informational)</td><td><code>temporal_analysis.py</code></td><td>time-aware scoring</td></tr>
+        <tr><td>Local Gateway</td><td><span class="status-live">Live</span></td><td><code>local_gateway.py</code></td><td>—</td></tr>
+        <tr><td>MCP read tools</td><td><span class="status-live">Live</span></td><td><code>portal/mcp_server.py</code></td><td>—</td></tr>
+        <tr><td>MCP approval gate</td><td><span class="status-live">Fail-closed</span></td><td><code>portal/mcp_server.py</code></td><td>Phase H</td></tr>
+        <tr><td>Significance layer ("why does it matter?")</td><td><span class="status-planned">Not built — boundary decided (ADR-0020)</span></td><td>—</td><td>Phase D</td></tr>
+        <tr><td>Intelligence Profiles</td><td><span class="status-optional">Declarative + RCD v2 initial activation</span></td><td><code>profiles.py</code>, <code>profile_registry.py</code>, <code>profile_activation.py</code></td><td>Phase E</td></tr>
+        <tr><td>Profile activation</td><td><span class="status-live">Narrow RCD v2 only</span> — no switch</td><td><code>profile_activation.py</code></td><td>Phase E</td></tr>
+        <tr><td>Backup readiness + verified backup + restore drill</td><td><span class="status-live">Live</span></td><td><code>backup_readiness.py</code>, <code>backup_manifest.py</code>, <code>backup_create.py</code>, <code>backup_verify.py</code></td><td>Phase F</td></tr>
+        <tr><td>Profile transition preview (review artifact; no activation)</td><td><span class="status-live">Live</span></td><td><code>profile_transition.py</code></td><td>Phase E</td></tr>
+        <tr><td>Verified backup / restore</td><td><span class="status-degraded">Manual</span></td><td><code>OPERATIONS.md</code></td><td>Phase F</td></tr>
+        <tr><td>Local observation intake (your own repos + documents)</td><td><span class="status-live">Live</span></td><td><code>repository_intake.py</code>, <code>document_intake.py</code>, <code>observation_normalizer.py</code>, <code>observation_intake.py</code></td><td>—</td></tr>
+        <tr><td>Observation query + cross-scope fact discovery</td><td><span class="status-live">Live</span> (never ranks)</td><td><code>observation_query.py</code></td><td>—</td></tr>
+        <tr><td>Repository file-content identity (<code>content:&lt;sha256&gt;</code> over exact raw bytes)</td><td><span class="status-live">Live</span> (a fact, never a verdict)</td><td><code>content_identity.py</code>, <code>repository_intake.py</code></td><td>—</td></tr>
+        <tr><td>Pattern candidates + first profile-owned detector (<code>lighthouse patterns</code>)</td><td><span class="status-live">Live</span> (a review object, never a finding)</td><td><code>pattern_candidate.py</code>, <code>repository_content_recurrence.py</code></td><td>—</td></tr>
+        <tr><td>Public-source check facts (<code>lighthouse public-sources</code>)</td><td><span class="status-live">Live</span> (append-only history; a not_found is HTTP 404/410, never disappearance)</td><td><code>public_source_intake.py</code>, <code>public_source_check.py</code>, <code>public_source_check_service.py</code></td><td>—</td></tr>
+        <tr><td>The significance layer ("why does it matter?")</td><td><span class="status-planned">Deliberately unbuilt</span></td><td>—</td><td>undecided</td></tr>
+        <tr><td>Repository Source Packs</td><td><span class="status-planned">Architecture-only</span></td><td>seed profile</td><td>Phase D</td></tr>
+        <tr><td>Invention discovery</td><td><span class="status-planned">In Gateway</span></td><td>external</td><td>Phase D/H</td></tr>
+        <tr><td>Gateway bridge</td><td><span class="status-planned">Blocked</span></td><td>—</td><td>Phase G</td></tr>
+        <tr><td>Dead-Man's Switch</td><td><span class="status-planned">Blocked</span></td><td><code>portal/dms_checker.py</code></td><td>Phase J</td></tr>
+        <tr><td>Safe Nostr publishing</td><td><span class="status-live">Live</span> (gated)</td><td><code>nostr_relay.py</code></td><td>—</td></tr>
+        <tr><td>Start9 packaging</td><td><span class="status-live">Live</span></td><td><code>config.py</code></td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <h2>What Lighthouse Does NOT Do</h2>
+    <div class="callout callout-danger">
+      <strong>Intentional non-features</strong>
+      No autonomous execution · no autonomous publishing (Nostr requires <code>NOSTR_PUBLISH_CORRELATIONS=true</code>, not dry-run, score ≥ 7.0, ≥ 2 signals) · no cloud dependency · no hidden AI in the core · no automatic profile switching · no automatic invention publication · no autonomous Dead-Man's Switch · no silent approval bypass · no opaque scoring · no side effects in dry-run · no execution of external repositories · <strong>no hypothesis layer and no finding layer</strong> — a pattern candidate is a review object, carries no score or rank, and authorizes nothing.
+    </div>
+    <div class="callout callout-info">
+      <strong>The observation layer cannot say anything matters</strong>
+      Local observation records facts about your repositories and documents and stops there. It has no score, no rank, no priority, no importance — and no word for one: a normalized fact's attribute key must belong to a closed observation vocabulary, and no column in the three fact tables can hold an opinion. <em>Cross-scope fact discovery performs exact lookup and direct set intersection over stored facts. It does not rank, infer, score, or interpret relationships.</em> The layer that would answer <em>why does this matter</em> does not exist, and will not arrive by accident.
+    </div>
+
+    <h2>Operational Maturity</h2>
+    <table>
+      <thead>
+        <tr><th>Subsystem</th><th>Maturity</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>SEC / ADSB / flight collection + correlation</td><td><span class="status-live">Operational</span></td></tr>
+        <tr><td>Alert / correlation / witness contracts</td><td><span class="status-live">Production Ready</span></td></tr>
+        <tr><td>Graph + backfill</td><td><span class="status-live">Operational</span></td></tr>
+        <tr><td>Callsign + temporal/tempo</td><td><span class="status-live">Operational</span></td></tr>
+        <tr><td>Local Gateway + MCP read tools</td><td><span class="status-live">Operational</span></td></tr>
+        <tr><td>MCP approval gate</td><td><span class="status-degraded">Experimental (fail-open defect)</span></td></tr>
+        <tr><td>Intelligence Profiles</td><td><span class="status-optional">Foundation + narrow RCD activation</span></td></tr>
+        <tr><td>Backup readiness, verified backup manifest &amp; isolated restore drill</td><td><span class="status-live">Operational</span></td></tr>
+        <tr><td>Profile transition preview (review artifact; no activation)</td><td><span class="status-live">Operational</span></td></tr>
+        <tr><td>Repository Source Packs</td><td><span class="status-planned">Architecture Complete</span></td></tr>
+        <tr><td>Gateway integration</td><td><span class="status-planned">Blocked</span></td></tr>
+        <tr><td>Dead-Man's Switch</td><td><span class="status-planned">Blocked</span></td></tr>
+        <tr><td>Public release</td><td><span class="status-planned">Planning Complete</span></td></tr>
+      </tbody>
+    </table>
+
+    <h2>Roadmap Context</h2>
+    <p>Lighthouse reasons in <strong>phases A–K</strong>, not packet numbers. Phases <strong>A–C are complete</strong> (Foundation, Graph, Temporal); the <strong>current phase is D</strong> (Repository Intelligence — local intake shipped; external source packs remain architecture-only). Narrow RCD v2 initial activation is shipped; <strong>switching</strong> is not. See the <a href="roadmap.html">Roadmap</a> and canonical <a href="../ROADMAP.md">ROADMAP.md</a>.</p>
+
+    <h2>Lighthouse In One Page</h2>
+    <p>Lighthouse watches public data and finds the moments where several independent signals converge on the same organization at the same time. In the <strong>legacy OSINT pipeline</strong> those moments become <strong>correlations</strong>: scored, integrity-hashed, graph-linked findings a human reviews. Its core is deterministic, it is graph-native and temporally aware, and it runs local-first on a self-hosted Start9 server. It is deliberately restrained — no autonomous action, no raw-alert publishing, no hidden AI in the core. Today, SEC + aviation correlation, graph and callsign intelligence, temporal analysis, a read-only MCP interface, a private local gateway, the <strong>observation intake layer</strong>, pattern candidates, and <strong>narrow RCD v2 initial activation</strong> (<code>lighthouse profile-activate</code>) are operational, backed by <strong>2455 unit tests</strong>. Switching, SciPres activation, and StartOS exposure of this V1 loop are not shipped.</p>
+
+    <p>The observation layer is deliberately <strong>unable to score</strong>: it can tell you what exists, where else a fact occurs, and how confident it is that it <em>determined</em> the fact — but never whether the fact <em>matters</em>. That boundary is now explicit and accepted (<strong>ADR-0020</strong>): <strong>facts first, interpretation second, findings only after evidence and review</strong>. A repeated fact is not automatically significant, a candidate is not a finding, and <strong>a finding is not permission to publish or execute</strong>. Detector rules are <strong>profile-owned</strong>. Profile <strong>switching</strong> remains frozen (ADR-0018, ADR-0024).</p>
+
+    <div class="callout callout-info">
+      <strong>Where to go next</strong>
+      New here? <a href="overview.html">What is Lighthouse?</a> · Operating it? <a href="operator.html">Operator Guide</a> · Building it? <a href="developer.html">Developer Guide</a> · Why these decisions? <a href="adr.html">Architecture Decisions</a>. Full detail lives in the canonical <a href="../CAPABILITIES.md">CAPABILITIES.md</a>.
+    </div>
+  </main>
+</div>
+<footer>
+  <span>Lighthouse — pattern-match-sentinel</span>
+  <a href="../CAPABILITIES.md">Capabilities</a>
+  <a href="../ARCHITECTURE_INDEX.md">Architecture Index</a>
+  <a href="../ROADMAP.md">Roadmap</a>
+  <a href="../adr/README.md">ADRs</a>
+  <span class="text-muted" style="margin-left:auto;">Static explainer — canonical source: Markdown docs</span>
+</footer>
+<script src="site.js"></script>
+</body>
+</html>

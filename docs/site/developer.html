@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Developer Guide | Lighthouse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="site-title" href="index.html"><span class="beacon"></span> Lighthouse</a>
+  <span class="header-status">YELLOW — Operational</span>
+</header>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Start Here</span>
+      <a href="index.html">Home</a>
+      <a href="overview.html">What is Lighthouse?</a>
+      <a href="capabilities.html">Capabilities</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Using It</span>
+      <a href="day-to-day.html">Day-to-Day Usage</a>
+      <a href="operator.html">Operator Guide</a>
+      <a href="targets.html">Target Profiles</a>
+      <a href="start9.html">Start9 Deployment</a>
+      <a href="local-gateway.html">Local Gateway</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Understanding It</span>
+      <a href="signals.html">Signal Sources</a>
+      <a href="graph.html">Graph Intelligence</a>
+      <a href="profiles.html">Intelligence Profiles</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="gateway-boundary.html">Gateway Boundary</a>
+      <a href="source-packs.html">Repository Source Packs</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Security & Decisions</span>
+      <a href="security.html">Security</a>
+      <a href="adr.html">Architecture Decisions</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">For Developers</span>
+      <a href="developer.html" class="active">Developer Guide</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+  </nav>
+  <main>
+    <h1>Developer Guide</h1>
+    <p class="page-intro">Onboarding guide for developers extending, debugging, or integrating Lighthouse.</p>
+
+    <h2 id="setup">Setup</h2>
+    <pre>git clone &lt;repo&gt;
+cd pattern-match-sentinel
+pip install -e ".[dev]"
+python -m playwright install chromium
+pre-commit install</pre>
+
+    <p>For the MCP server / portal:</p>
+    <pre>pip install -e ".[portal]"
+uvicorn portal.app:app --host 0.0.0.0 --port 8080</pre>
+
+    <h2 id="commands">Key Commands</h2>
+    <table>
+      <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><code>make install</code></td><td>pip install -e ".[dev]"</td></tr>
+        <tr><td><code>make test</code></td><td>Run unit tests (pytest tests/unit -v --tb=short)</td></tr>
+        <tr><td><code>make lint</code></td><td>ruff check + ruff format --check</td></tr>
+        <tr><td><code>make format</code></td><td>ruff format + ruff check --fix</td></tr>
+        <tr><td><code>make test-cov</code></td><td>Unit tests with coverage report</td></tr>
+        <tr><td><code>make docker-up</code></td><td>Build and start Docker stack</td></tr>
+        <tr><td><code>make clean</code></td><td>Remove __pycache__, .pytest_cache, dist, htmlcov</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="tests">Running Tests</h2>
+    <pre># Full unit suite (clean — no publishing credentials)
+env -u NOSTR_PRIVATE_KEY_HEX -u NOSTR_PUBLISH_CORRELATIONS \
+  pytest tests/unit -v --tb=short
+
+# Single test file
+pytest tests/unit/test_velocity_tracker.py -v
+
+# Integration tests (live APIs — skip in CI by default)
+pytest tests/integration -m integration -v</pre>
+
+    <p>All tests are async-native (<code>asyncio_mode = "auto"</code> in <code>pyproject.toml</code>). Tests that call <code>async</code> functions must be <code>async def</code>. No <code>@pytest.mark.asyncio</code> needed.</p>
+    <p>Current unit test count: 2455 passing. (Canonical count: <a href="../ROADMAP_STATUS.md"><code>docs/ROADMAP_STATUS.md</code></a>.)</p>
+
+    <h2 id="fixtures">Test Fixtures</h2>
+    <p><code>tests/conftest.py</code> provides shared fixtures:</p>
+    <ul>
+      <li><code>tmp_db</code> — temp-file SQLite with <code>state_db</code> schema from <code>init_db()</code>. Does NOT include the <code>alerts</code> table — tests needing it must call <code>db.init_alerts_table()</code>.</li>
+      <li><code>tmp_db_path</code> — path to the temp SQLite file</li>
+      <li><code>sample_uspto_raw</code>, <code>sample_wipo_raw</code> — patent API response fixtures</li>
+      <li><code>nostr_test_key_hex</code> — test Nostr private key</li>
+    </ul>
+
+    <h2 id="module-map">Module Map</h2>
+    <table>
+      <thead><tr><th>File</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>main.py</code></td><td>Pipeline orchestrator — runs all modules in sequence with per-module try/except</td></tr>
+        <tr><td><code>config.py</code></td><td>13 typed dataclass configs + getter functions</td></tr>
+        <tr><td><code>modules/db.py</code></td><td>All DB persistence — alerts, correlations, graph, callsigns</td></tr>
+        <tr><td><code>modules/alerts.py</code></td><td><code>AlertRecord</code> — canonical alert contract</td></tr>
+        <tr><td><code>modules/correlations.py</code></td><td><code>CorrelationRecord</code> — canonical correlation contract</td></tr>
+        <tr><td><code>modules/correlator.py</code></td><td>A3 engine — 4 detectors, deception filter</td></tr>
+        <tr><td><code>modules/correlation_scoring.py</code></td><td>Deterministic weighted scoring</td></tr>
+        <tr><td><code>modules/graph.py</code></td><td><code>GraphNode</code> / <code>GraphEdge</code> contracts</td></tr>
+        <tr><td><code>modules/graph_builder.py</code></td><td>CorrelationRecord → graph nodes/edges</td></tr>
+        <tr><td><code>modules/graph_backfill.py</code></td><td>Historical graph repair (idempotent)</td></tr>
+        <tr><td><code>modules/graph_explainer.py</code></td><td>Deterministic plain-language explanations</td></tr>
+        <tr><td><code>modules/callsigns.py</code></td><td>Callsign normalization and enrichment</td></tr>
+        <tr><td><code>modules/witness.py</code></td><td>SHA-256 witness hash for correlations (signing helper demonstration/test-only)</td></tr>
+        <tr><td><code>modules/targets.py</code></td><td><code>TargetProfile</code> / <code>TargetConfig</code> — target schema</td></tr>
+        <tr><td><code>modules/signal_router.py</code></td><td>Builds per-signal route plans from active targets</td></tr>
+        <tr><td><code>modules/temporal_analysis.py</code></td><td>Deterministic callsign recurrence metrics and facility activity windows</td></tr>
+        <tr><td><code>modules/tempo_analysis.py</code></td><td>Operational tempo and mission recurrence analysis</td></tr>
+        <tr><td><code>modules/local_gateway.py</code></td><td>Bounded read-only local intelligence dispatch (5 methods)</td></tr>
+        <tr><td><code>portal/mcp_server.py</code></td><td>MCP server — 14 tools, approval gate</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="invariants">Core Invariants — Do Not Break</h2>
+    <ul>
+      <li>No DB writes during dry-run</li>
+      <li>No live network calls in unit tests</li>
+      <li>All alert persistence goes through <code>AlertRecord</code> + <code>db.insert_alert()</code></li>
+      <li>All graph writes go through <code>db.upsert_graph_node</code> / <code>db.upsert_graph_edge</code></li>
+      <li>No LLM in the deterministic core (narrative module is the isolated exception)</li>
+      <li>No import-time config singleton coupling — use getter functions</li>
+      <li>No global mutable state in modules</li>
+      <li>No <code>logging.basicConfig</code> in module code — modules use <code>logging.getLogger(__name__)</code> only</li>
+      <li>No graph writes in the MCP layer</li>
+      <li>No DB schema changes without migration safety (<code>_ensure_alerts_column</code> pattern)</li>
+    </ul>
+
+    <h2 id="config-pattern">Config Pattern</h2>
+    <p>Access config via getter functions. Do not import config singleton objects directly in modules (<code>main.py</code> is the exception).</p>
+    <pre># Correct
+from config import get_sec_cfg
+cfg = get_sec_cfg()
+
+# Wrong — couples module to import-time singleton
+from config import sec_cfg</pre>
+
+    <p>All data output paths use <code>_data_path(rel)</code> (delegates to <code>modules/data_paths.py</code>):</p>
+    <pre># Correct — respects LIGHTHOUSE_DATA_DIR
+output_dir: Path = field(default_factory=lambda: _data_path("flights"))
+
+# Wrong — hardcodes path
+output_dir: str = "data/flights"</pre>
+
+    <h2 id="adding-packet">How to Add a Packet</h2>
+    <ol>
+      <li>Review <a href="../ROADMAP_STATUS.md">ROADMAP_STATUS.md</a> and <a href="../FUTURE_PLAN.md">FUTURE_PLAN.md</a> for current direction and guardrails</li>
+      <li>Identify which module(s) change and what the data contract impact is</li>
+      <li>Write unit tests first — no live network calls</li>
+      <li>Implement the change in small increments — never rewrite a module wholesale</li>
+      <li>Validate: <code>make test</code>, <code>make lint</code>, dry-run</li>
+      <li>Update <code>ROADMAP_STATUS.md</code> with packet status</li>
+      <li>Update the test count in docs/ROADMAP_STATUS.md if tests were added</li>
+    </ol>
+
+    <h2 id="code-style">Code Style</h2>
+    <ul>
+      <li>Python 3.11+, line length 100</li>
+      <li>ruff rules: E, F, I, UP, B, SIM</li>
+      <li>Format: <code>ruff format</code> + <code>ruff check --fix</code></li>
+      <li>No comments unless the WHY is non-obvious</li>
+      <li>No multi-line docstrings</li>
+      <li>No backwards-compatibility shims for removed code</li>
+    </ul>
+    <pre>ruff check .
+ruff format --check .</pre>
+
+    <h2 id="validate">Validation Checklist</h2>
+    <pre># Unit tests (clean)
+env -u NOSTR_PRIVATE_KEY_HEX -u NOSTR_PUBLISH_CORRELATIONS \
+  pytest tests/unit -v --tb=short
+
+# Lint
+ruff check .
+
+# Config import check
+python -c "from config import get_arxiv_cfg; c=get_arxiv_cfg(); print(len(c.researchers))"
+
+# Docker build
+docker build -t pattern-match-sentinel:test .
+docker run --rm pattern-match-sentinel:test python -c "import main; import config; print('imports ok')"
+docker run --rm pattern-match-sentinel:test lighthouse --help</pre>
+
+    <h2 id="docs">Where Docs Live</h2>
+    <table>
+      <thead><tr><th>File</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>docs/FUTURE_PLAN.md</code></td><td>Long-term direction, guardrails, strategic doctrine</td></tr>
+        <tr><td><code>docs/ROADMAP_STATUS.md</code></td><td>Packet queue, operational status, handoff notes</td></tr>
+        <tr><td><code>docs/OPERATIONS.md</code></td><td>Production SOP — pre-run checklist, backup/restore, Start9 operations</td></tr>
+        <tr><td><code>docs/site/</code></td><td>This static HTML site — human-readable explainer layer</td></tr>
+      </tbody>
+    </table>
+  </main>
+</div>
+<footer>
+  <span>Lighthouse — pattern-match-sentinel</span>
+  <a href="../FUTURE_PLAN.md">Future Plan</a>
+  <a href="../ROADMAP_STATUS.md">Roadmap Status</a>
+  <a href="../OPERATIONS.md">Operations SOP</a>
+</footer>
+<script src="site.js"></script>
+</body>
+</html>

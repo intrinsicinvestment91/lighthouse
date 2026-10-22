@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intelligence Profiles | Lighthouse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="site-title" href="index.html"><span class="beacon"></span> Lighthouse</a>
+  <span class="header-status">YELLOW — Operational</span>
+</header>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Start Here</span>
+      <a href="index.html">Home</a>
+      <a href="overview.html">What is Lighthouse?</a>
+      <a href="capabilities.html">Capabilities</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Using It</span>
+      <a href="day-to-day.html">Day-to-Day Usage</a>
+      <a href="operator.html">Operator Guide</a>
+      <a href="targets.html">Target Profiles</a>
+      <a href="start9.html">Start9 Deployment</a>
+      <a href="local-gateway.html">Local Gateway</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Understanding It</span>
+      <a href="signals.html">Signal Sources</a>
+      <a href="graph.html">Graph Intelligence</a>
+      <a href="profiles.html" class="active">Intelligence Profiles</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="gateway-boundary.html">Gateway Boundary</a>
+      <a href="source-packs.html">Repository Source Packs</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Security & Decisions</span>
+      <a href="security.html">Security</a>
+      <a href="adr.html">Architecture Decisions</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">For Developers</span>
+      <a href="developer.html">Developer Guide</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+  </nav>
+  <main>
+    <h1>Intelligence Profiles</h1>
+    <p class="page-intro">The foundation for turning Lighthouse into a customizable intelligence application — selectable, declarative mission profiles. <strong>Narrow initial activation shipped</strong> for <code>repository_capability_discovery</code> v2; <strong>active-to-active switching is not implemented.</strong></p>
+
+    <div class="callout callout-info">
+      <strong>Status</strong>
+      Packet LHP-PROFILE-01 shipped the profile <em>contract</em>, a read-only registry, and backup-readiness
+      inspection. <strong>Narrow backup-gated initial activation</strong> of <code>repository_capability_discovery</code>
+      v2 is shipped (<code>lighthouse profile-activate</code>, <code>lighthouse active-profile</code>).
+      <strong>Not shipped:</strong> active-to-active switching, deactivation, migration, rollback, runtime
+      policy resolution, the invention-discovery engine, or a live Gateway bridge. Switch design:
+      <a href="../adr/0024-controlled-profile-switch-lifecycle.md">ADR-0024</a>.
+    </div>
+
+    <h2 id="what">What an Intelligence Profile Is</h2>
+    <p>An <strong>Intelligence Profile</strong> is a versioned, <strong>declarative policy bundle</strong> describing which mission a Lighthouse deployment is configured for — the public scientific mission, private invention discovery, aerospace/defense monitoring, and so on. It declares <em>what</em> is allowed (source categories, collectors, observation tiers, graph/correlation/temporal participation, privacy and publishing policy, backup requirements, interface and dead-man's-switch eligibility) — never <em>how</em> to execute anything.</p>
+
+    <div class="callout callout-info">
+      <strong>Profiles own the interpretation; the substrate stays neutral (ADR-0020).</strong> The shared
+      platform provides observation, normalization, facts, provenance, temporal history, and the
+      candidate/hypothesis/finding <em>mechanics</em>. A <strong>profile</strong> owns its detector
+      families and pattern rules, its evidence and counterevidence requirements, and its privacy,
+      publishing and retention policy. This is the first thing a profile would ever be <em>read</em> for at
+      runtime — and it is exactly why a runtime policy resolver (<code>CORE-RESOLVE-01</code>) is a
+      prerequisite before active-to-active switching
+      (<a href="../adr/0024-controlled-profile-switch-lifecycle.md">ADR-0024</a>). Narrow initial
+      activation is shipped; switching is not.
+    </div>
+    <p>A profile is <strong>not a plugin.</strong> It may never declare arbitrary executable modules or shell commands; the validator rejects executable-intent keys anywhere in any policy block. Profiles are safe, reviewable configuration — not code.</p>
+
+    <h2 id="bundled">Bundled Profiles</h2>
+    <p>Five declarative seed definitions ship in <code>seed/profiles/</code>. None are production-ready.</p>
+    <table>
+      <thead><tr><th>Profile</th><th>Purpose</th><th>Maturity</th></tr></thead>
+      <tbody>
+        <tr><td><code>public_scientific_lighthouse</code></td><td>The original public-interest scientific/aerospace/energy mission, with responsible disclosure preparation. Auto-publish forbidden; operator approval required.</td><td>ready_for_validation</td></tr>
+        <tr><td><code>aerospace_defense_monitoring</code></td><td>The proven ADSB + flight + SEC signal, with callsign/graph/tempo intelligence.</td><td>draft</td></tr>
+        <tr><td><code>fusion_research_monitoring</code></td><td>Fusion/advanced-energy institutions via arXiv rosters, patents, and narrative shifts.</td><td>draft</td></tr>
+        <tr><td><code>repository_capability_discovery</code></td><td>Reusable-capability discovery across approved repos, metadata-first; repos never executed or installed.</td><td>draft</td></tr>
+        <tr><td><code>scientific_preservation</code></td><td>Preserve research + provenance; prepare reviewable disclosure bundles. Disclosure and any timed release remain disabled pending DMS safety design.</td><td>draft</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="invariants">Fail-Closed Invariants</h2>
+    <ul>
+      <li><code>profile_id</code> is a stable, machine-safe identifier; <code>display_name</code> non-empty.</li>
+      <li>Unknown or future <code>schema_version</code> is rejected.</li>
+      <li>Status is <code>draft</code>, <code>experimental</code>, or <code>ready_for_validation</code> — never "production" or "active."</li>
+      <li>No executable-intent keys anywhere in any policy block.</li>
+      <li>A private profile (<code>local_only</code>) may not enable public publishing.</li>
+      <li>Dead-man's-switch eligibility is declarative only and defaults disabled — eligibility never implies enrollment.</li>
+      <li>A declared backup <code>data_root</code> must resolve under the Start9 <code>/data</code> boundary.</li>
+    </ul>
+
+    <h2 id="one-active">Exactly One Active Profile</h2>
+    <p>At most one profile may govern new intake and derivation at any time. Switching is a controlled,
+    audited state transition — a fenced, compare-and-set active-to-active cutover that never
+    passes through <code>no_active_profile</code> — not an in-place edit. Rollback is bounded (see
+    <a href="../adr/0024-controlled-profile-switch-lifecycle.md">ADR-0024</a> §11) — not guaranteed
+    automatic reversibility.</p>
+    <div class="callout callout-warn">
+      <strong>Shipped vs not shipped</strong>
+      <strong>Shipped:</strong> narrow initial activation (<code>no_active_profile → repository_capability_discovery</code> v2)
+      via <code>lighthouse profile-activate</code>. <strong>Not shipped:</strong> active-to-active switching,
+      deactivation, migration, rollback automation, runtime policy resolution, Gateway-authorized widening switches.
+      <code>Indeterminate</code> projection dimensions refuse unconditionally. Local switch authority requires
+      explicit <strong>code/release-owned</strong> <code>locally_activatable</code> enrollment — <strong>not a seed field</strong>
+      (currently empty) and a complete authority projection —
+      no bundled profile is locally switchable today.
+    </div>
+
+    <h2 id="backup">Backup Readiness</h2>
+    <p>Before any future profile switch, Lighthouse must prove — read-only — that all authoritative state resolves under <code>/data</code> and can be inventoried. The inspector returns <code>READY</code>, <code>NOT_READY</code>, or <code>UNKNOWN</code>, fail-closed.</p>
+    <div class="callout callout-warn">
+      <strong>Eligibility is not a completed backup</strong>
+      A <code>READY</code> verdict means authoritative state is <em>boundary-eligible</em> for backup. It does <strong>not</strong> assert that a backup has been performed — that is a separate step.
+    </div>
+
+    <h2 id="commands">Read-Only Commands</h2>
+    <pre>lighthouse profiles                       # list bundled profiles
+lighthouse profiles --show &lt;profile_id&gt;    # show one
+lighthouse profiles --validate            # validate all bundled profiles
+lighthouse profiles --json                # machine-readable
+
+lighthouse backup-readiness               # inspect backup readiness (read-only)
+lighthouse backup-readiness --json</pre>
+    <p>These never activate a profile, mutate configuration, write approval state, move data, or trigger a backup.</p>
+
+    <h2 id="more">More</h2>
+    <ul>
+      <li><a href="../INTELLIGENCE_PROFILE_ARCHITECTURE.md">Intelligence Profile Architecture</a></li>
+      <li><a href="../BACKUP_READINESS_AND_PROFILE_SWITCHING.md">Backup Readiness &amp; Profile Switching</a></li>
+      <li><a href="../adr/0024-controlled-profile-switch-lifecycle.md">ADR-0024 — Controlled Profile-Switch Lifecycle</a></li>
+      <li><a href="../GATEWAY_LIGHTHOUSE_PROFILE_BOUNDARY.md">Gateway / Lighthouse Boundary</a></li>
+      <li><a href="../PROFILE_SECURITY_RISKS.md">Security &amp; Privacy Risk Register</a></li>
+    </ul>
+  </main>
+</div>
+<footer>
+  <span>Lighthouse — pattern-match-sentinel</span>
+  <a href="../FUTURE_PLAN.md">Future Plan</a>
+  <a href="../ROADMAP_STATUS.md">Roadmap Status</a>
+  <a href="../OPERATIONS.md">Operations SOP</a>
+</footer>
+<script src="site.js"></script>
+</body>
+</html>

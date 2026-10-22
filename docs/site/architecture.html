@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture | Lighthouse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="site-title" href="index.html"><span class="beacon"></span> Lighthouse</a>
+  <span class="header-status">YELLOW — Operational</span>
+</header>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Start Here</span>
+      <a href="index.html">Home</a>
+      <a href="overview.html">What is Lighthouse?</a>
+      <a href="capabilities.html">Capabilities</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Using It</span>
+      <a href="day-to-day.html">Day-to-Day Usage</a>
+      <a href="operator.html">Operator Guide</a>
+      <a href="targets.html">Target Profiles</a>
+      <a href="start9.html">Start9 Deployment</a>
+      <a href="local-gateway.html">Local Gateway</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Understanding It</span>
+      <a href="signals.html">Signal Sources</a>
+      <a href="graph.html">Graph Intelligence</a>
+      <a href="profiles.html">Intelligence Profiles</a>
+      <a href="architecture.html" class="active">Architecture</a>
+      <a href="gateway-boundary.html">Gateway Boundary</a>
+      <a href="source-packs.html">Repository Source Packs</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Security & Decisions</span>
+      <a href="security.html">Security</a>
+      <a href="adr.html">Architecture Decisions</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">For Developers</span>
+      <a href="developer.html">Developer Guide</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+  </nav>
+  <main>
+    <h1>Architecture</h1>
+    <p class="page-intro">How Lighthouse is structured internally — collector layer, correlation engine, graph, and output surfaces. The documentation navigation hub is <a href="../ARCHITECTURE_INDEX.md">docs/ARCHITECTURE_INDEX.md</a>; the engine/control-plane split is on the <a href="gateway-boundary.html">Gateway Boundary</a> page; direction is in the <a href="roadmap.html">Roadmap</a> (phases A–K).</p>
+
+    <h2 id="pipeline">Full Pipeline</h2>
+
+    <div class="arch-diagram">
+      <div class="arch-label">Configuration &amp; Targets</div>
+      <div class="arch-row">
+        <div class="arch-box">config.py<br><small>13 typed dataclass singletons</small></div>
+        <div class="arch-box">data/targets.json<br><small>Target profiles</small></div>
+        <div class="arch-box">seed/researchers.json<br><small>arXiv roster</small></div>
+      </div>
+      <div class="arch-down-arrow">↓</div>
+      <div class="arch-label">Collector Layer (main.py)</div>
+      <div class="arch-row">
+        <div class="arch-box">sec_sentinel</div>
+        <div class="arch-box">adsb_sentinel</div>
+        <div class="arch-box">flight_tracker</div>
+        <div class="arch-box">arxiv_sentinel</div>
+        <div class="arch-box dim">patents (disabled)</div>
+        <div class="arch-box dim">wayback_archiver</div>
+        <div class="arch-box dim">narrative (optional)</div>
+      </div>
+      <div class="arch-down-arrow">↓</div>
+      <div class="arch-label">Alert Layer</div>
+      <div class="arch-row">
+        <div class="arch-box">AlertRecord<br><small>modules/alerts.py</small></div>
+        <div class="arch-box">modules/db.py<br><small>insert_alert()</small></div>
+        <div class="arch-box">callsign_observations<br><small>modules/db.py</small></div>
+      </div>
+      <div class="arch-down-arrow">↓</div>
+      <div class="arch-label">Correlation Engine</div>
+      <div class="arch-row">
+        <div class="arch-box">correlator.py<br><small>A3 — temporal+spatial+entity</small></div>
+        <div class="arch-box">correlation_scoring.py<br><small>Weighted signal scoring</small></div>
+        <div class="arch-box">witness.py<br><small>SHA-256 witness hash</small></div>
+      </div>
+      <div class="arch-down-arrow">↓</div>
+      <div class="arch-label">Graph Layer</div>
+      <div class="arch-row">
+        <div class="arch-box accent">GraphNode / GraphEdge<br><small>modules/graph.py</small></div>
+        <div class="arch-box accent">upsert via db.py<br><small>graph_nodes / graph_edges</small></div>
+        <div class="arch-box dim">graph_backfill.py<br><small>historical repair</small></div>
+      </div>
+      <div class="arch-down-arrow">↓</div>
+      <div class="arch-label">Output Surfaces</div>
+      <div class="arch-row">
+        <div class="arch-box">CLI<br><small>lighthouse alerts/graph/correlations</small></div>
+        <div class="arch-box">MCP Server<br><small>14 tools, read-only</small></div>
+        <div class="arch-box">Nostr<br><small>High-signal gate only</small></div>
+        <div class="arch-box dim">Portal (DMS)<br><small>FastAPI REST</small></div>
+      </div>
+    </div>
+
+    <h2 id="fault-isolation">Fault Isolation</h2>
+    <p>Each collector module in <code>main.py</code> runs inside its own <code>try/except</code>. A bad WIPO response, a hung Playwright session, or a 429 rate limit will log the traceback and set that module's result to an empty list. It will not abort subsequent modules or the Nostr broadcast.</p>
+    <p>This means: if arXiv times out, SEC still runs. If the archive crawler fails, ADSB still runs.</p>
+
+    <h2 id="config">Configuration Layer</h2>
+    <p><code>config.py</code> holds 13 typed dataclass singletons for all module settings. Access is via getter functions, never by importing the singleton directly in module code.</p>
+    <table>
+      <thead><tr><th>Getter</th><th>Config area</th></tr></thead>
+      <tbody>
+        <tr><td><code>get_nostr_cfg()</code></td><td>Nostr relay URLs, keys, region</td></tr>
+        <tr><td><code>get_sec_cfg()</code></td><td>SEC EDGAR watched companies, user-agent</td></tr>
+        <tr><td><code>get_arxiv_cfg()</code></td><td>arXiv researcher roster (from seed/researchers.json)</td></tr>
+        <tr><td><code>get_velocity_cfg()</code></td><td>Patent velocity thresholds</td></tr>
+        <tr><td><code>get_patent_cfg()</code></td><td>Patent provider selection</td></tr>
+        <tr><td><code>get_narrative_cfg()</code></td><td>Narrative model (claude-haiku by default)</td></tr>
+        <tr><td><code>get_correlator_cfg()</code></td><td>Correlation time windows, score thresholds</td></tr>
+      </tbody>
+    </table>
+    <p>All data output paths in config are resolved via <code>_data_path(rel)</code>, which delegates to
+    <code>modules/data_paths.py</code> — the canonical reader of <code>LIGHTHOUSE_DATA_DIR</code> and
+    <code>DB_PATH</code> (defaults to <code>"data"</code>; <code>"/data"</code> on Start9).
+    Never hardcode <code>"data/..."</code> path strings.</p>
+
+    <h2 id="alert-layer">Alert Layer</h2>
+    <p>Every signal output uses <code>AlertRecord</code> from <code>modules/alerts.py</code> as the canonical contract. An alert always includes: <code>source</code>, <code>alert_type</code>, <code>score</code>, <code>score_label</code>, <code>provenance</code>, <code>payload</code>, <code>schema_version</code>.</p>
+    <p>Alerts are persisted via <code>db.insert_alert()</code>. No module bypasses this — hand-crafted alert dicts that skip <code>AlertRecord.validate()</code> are rejected.</p>
+    <p>Score dimensions: source reliability, keyword strength, recency, uniqueness, watchlist match. Composite 0–1 score maps to <code>high / medium / low</code> labels.</p>
+
+    <h2 id="correlator">Correlation Engine (A3)</h2>
+    <p>The correlator (<code>modules/correlator.py</code>) runs four detectors across accumulated alerts:</p>
+    <ul>
+      <li><strong>Temporal</strong> — multiple alerts within a time window</li>
+      <li><strong>Spatial</strong> — alerts mentioning the same facility or region</li>
+      <li><strong>Entity</strong> — alerts referencing the same named entity</li>
+      <li><strong>Cross-source</strong> — alerts from different signal types (e.g. ADSB + SEC)</li>
+    </ul>
+    <p>Scoring uses <code>modules/correlation_scoring.py</code> — deterministic weighted scoring that accounts for signal mix (ADSB military + SEC materiality outranks flight + narrative), multi-signal bonuses, and evidence quality. Scores range 1–10.</p>
+    <p>A deception filter marks single-source events as probationary. Single-source events have <code>is_single_source=True</code> and lower trust.</p>
+    <p>Every persisted correlation stores a deterministic SHA-256 witness hash of its canonical claim (<code>modules/witness.py</code>). In the production path (<code>correlator._attach_witness_survival</code>) no signing key is passed, so the witness signature field is stored empty. A BIP-340 signing helper exists for demonstration and tests only (<code>modules/_schnorr.py</code>, not for production keys); signed witness attestations are a future intention. Optional Nostr publishing signs Nostr events separately with <code>coincurve</code>.</p>
+
+    <h2 id="graph">Graph Layer</h2>
+    <p>On every successful correlation, <code>modules/graph_builder.py</code> converts the <code>CorrelationRecord</code> into nodes and edges, which are upserted to <code>graph_nodes</code> and <code>graph_edges</code> via <code>modules/db.py</code>.</p>
+    <p>Node types: <code>entity:&lt;name&gt;</code>, <code>event:&lt;hash&gt;</code>, <code>facility:&lt;name&gt;</code>, <code>signal:&lt;type&gt;</code>.</p>
+    <p>Edge types encode relationships: entity → event contributions, signal → event contributions.</p>
+    <p>Graph traversal is BFS, depth-limited (max depth 3 via MCP tools). All graph reads are via <code>modules/db.py</code> traversal helpers.</p>
+
+    <h2 id="callsigns">Callsign Layer</h2>
+    <p><code>modules/callsigns.py</code> provides deterministic callsign normalization and enrichment. ADSB and flight alerts include <code>callsign_enrichment</code> metadata: normalized callsign, prefix, category, military-style flag.</p>
+    <p>Callsign observations are persisted to <code>callsign_observations</code> (a separate table, not the main graph). This enables repeated callsign analysis — the same callsign at the same facility on multiple runs becomes stronger evidence.</p>
+    <p>Graph-native callsigns (promoting recurring callsigns to graph nodes) are planned for a future packet.</p>
+
+    <h2 id="mcp">MCP Interface</h2>
+    <p>The Lighthouse MCP server (<code>portal/mcp_server.py</code>) exposes 14 tools across 5 phases. All read-only tools are bounded (limit ≤ 100, depth ≤ 3) and DB-safe. Write/publish tools require an <code>approval_token</code> and default to <code>dry_run=True</code>.</p>
+    <table>
+      <thead><tr><th>Phase</th><th>Tools</th></tr></thead>
+      <tbody>
+        <tr><td>Phase 1</td><td><code>ping</code></td></tr>
+        <tr><td>Phase 2</td><td><code>query_alerts</code>, <code>query_correlations</code>, <code>explain_correlation</code>, <code>get_entity_graph</code>, <code>get_graph_neighbors</code>, <code>get_graph_edges_between</code>, <code>explain_entity_graph</code>, <code>query_patents</code>, <code>query_flights</code>, <code>query_researchers</code>, <code>query_velocity</code>, <code>list_archived_pages</code>, <code>get_dms_registrations</code></td></tr>
+        <tr><td>Phase 4</td><td><code>run_module</code>, <code>run_pipeline</code> (gated)</td></tr>
+        <tr><td>Phase 5</td><td><code>build_and_preview_note</code>, <code>publish_note</code> (gated)</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="nostr">Nostr Publishing Gate</h2>
+    <p>All four conditions must be true before a correlation publishes to Nostr:</p>
+    <ul>
+      <li><code>NOSTR_PUBLISH_CORRELATIONS=true</code></li>
+      <li><code>not dry_run</code></li>
+      <li>correlation <code>score &gt;= 7.0</code></li>
+      <li>at least 2 unique signals</li>
+    </ul>
+    <p>Only five fields may appear in a published note: <code>entity</code>, <code>event_type</code>, <code>score</code>, <code>signals</code>, <code>summary</code>. Raw alert payloads are never published.</p>
+
+    <h2 id="db">Database</h2>
+    <p>Alert, correlation, graph, and callsign persistence goes through <code>modules/db.py</code>.
+    Its SQLite file derives as <code>$LIGHTHOUSE_DATA_DIR/state.db</code> unless <code>DB_PATH</code>
+    explicitly overrides it. Per-module deduplication caches in <code>state_db.py</code> use
+    <code>AppConfig.state_db_path</code> and <code>DmsConfig.db_path</code>, which always resolve to
+    <code>$LIGHTHOUSE_DATA_DIR/state.db</code> and do not follow a differing <code>DB_PATH</code>.
+    An explicit <code>DB_PATH</code> can intentionally separate those stores.</p>
+    <p>Key tables: <code>alerts</code>, <code>correlation_events</code>, <code>graph_nodes</code>, <code>graph_edges</code>, <code>callsign_observations</code>, plus 9 tables in <code>state_db.py</code> for per-module caches (patents, flights, SEC filings, DMS, etc.).</p>
+    <p>Schema migrations are handled via <code>_ensure_alerts_column</code> — new columns are added live and are safe against existing databases.</p>
+
+    <h2 id="start9">Start9 Deployment Model</h2>
+    <p>On Start9, Lighthouse runs in a container with <code>LIGHTHOUSE_DATA_DIR=/data</code> and
+    <code>DB_PATH=/data/state.db</code> (recommended explicitly for <code>podman exec</code>; the
+    application derives <code>DB_PATH</code> from <code>LIGHTHOUSE_DATA_DIR</code> when unset).
+    The entrypoint seeds <code>targets.json</code> and <code>entities.json</code> from the image to
+    <code>/data/</code> on first run. Researchers are loaded directly from
+    <code>/app/seed/researchers.json</code> by config — they are not copied to <code>/data/</code>.</p>
+    <p>See <a href="start9.html">Start9 Deployment</a> for the full operations guide.</p>
+  </main>
+</div>
+<footer>
+  <span>Lighthouse — pattern-match-sentinel</span>
+  <a href="../ARCHITECTURE_INDEX.md">Architecture Index</a>
+  <a href="../ROADMAP.md">Roadmap</a>
+  <a href="../adr/README.md">ADRs</a>
+</footer>
+<script src="site.js"></script>
+</body>
+</html>

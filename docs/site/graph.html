@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Graph Intelligence | Lighthouse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="site-title" href="index.html"><span class="beacon"></span> Lighthouse</a>
+  <span class="header-status">YELLOW — Operational</span>
+</header>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Start Here</span>
+      <a href="index.html">Home</a>
+      <a href="overview.html">What is Lighthouse?</a>
+      <a href="capabilities.html">Capabilities</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Using It</span>
+      <a href="day-to-day.html">Day-to-Day Usage</a>
+      <a href="operator.html">Operator Guide</a>
+      <a href="targets.html">Target Profiles</a>
+      <a href="start9.html">Start9 Deployment</a>
+      <a href="local-gateway.html">Local Gateway</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Understanding It</span>
+      <a href="signals.html">Signal Sources</a>
+      <a href="graph.html" class="active">Graph Intelligence</a>
+      <a href="profiles.html">Intelligence Profiles</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="gateway-boundary.html">Gateway Boundary</a>
+      <a href="source-packs.html">Repository Source Packs</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Security & Decisions</span>
+      <a href="security.html">Security</a>
+      <a href="adr.html">Architecture Decisions</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">For Developers</span>
+      <a href="developer.html">Developer Guide</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+  </nav>
+  <main>
+    <h1>Graph Intelligence</h1>
+    <p class="page-intro">How Lighthouse builds and queries a structured graph of entities, events, and signals over time.</p>
+
+    <h2 id="what">What the Graph Is For</h2>
+    <p>The graph is the primary intelligence interface. Instead of scanning a flat list of alerts, you can ask structured questions: "what signals have touched Lockheed Martin?" or "which entities are two hops from DARPA in the correlation graph?"</p>
+    <p>The graph grows over time. The longer Lighthouse runs, the richer the traversal becomes.</p>
+
+    <div class="callout callout-info">
+      <strong>Graph-native operating model</strong>
+      Lighthouse is a graph-native intelligence platform. Correlations, entities, facilities, callsigns, and prefixes are all queryable graph structure — not just log entries.
+    </div>
+
+    <h2 id="nodes">Graph Nodes</h2>
+    <p>Each node represents one real-world thing. Node types:</p>
+    <table>
+      <thead><tr><th>Node type</th><th>Example ID</th><th>What it represents</th></tr></thead>
+      <tbody>
+        <tr><td><code>entity</code></td><td><code>entity:Lockheed Martin</code></td><td>A watched organization</td></tr>
+        <tr><td><code>facility</code></td><td><code>facility:DARPA HQ</code></td><td>A physical location in the flight/ADSB config</td></tr>
+        <tr><td><code>callsign</code></td><td><code>callsign:PAT16</code></td><td>A tracked aircraft callsign (graph-native since Packet 25)</td></tr>
+        <tr><td><code>prefix</code></td><td><code>prefix:PAT</code></td><td>A callsign prefix — military-style or standard</td></tr>
+        <tr><td><code>event</code></td><td><code>event:&lt;hash&gt;</code></td><td>A correlation event (multi-signal observation)</td></tr>
+        <tr><td><code>signal</code></td><td><code>signal:sec</code></td><td>A signal type that contributed to an event</td></tr>
+      </tbody>
+    </table>
+    <p>Node IDs are deterministic — the same entity always gets the same ID across runs, enabling idempotent upserts.</p>
+
+    <h2 id="edges">Graph Edges</h2>
+    <p>Edges connect nodes and encode what the relationship is:</p>
+    <table>
+      <thead><tr><th>From → To</th><th>Relationship</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>entity → event</td><td>(subject)</td><td>This entity is the subject of this correlation event</td></tr>
+        <tr><td>signal → event</td><td>(contributed)</td><td>This signal type contributed to this event</td></tr>
+        <tr><td>event → entity</td><td>(involves)</td><td>This event involves this entity</td></tr>
+        <tr><td>callsign → event</td><td><code>participated_in</code></td><td>This callsign was observed during this correlation event</td></tr>
+        <tr><td>callsign → signal</td><td><code>observed_via</code></td><td>This callsign was detected by this signal type (ADSB/flight)</td></tr>
+        <tr><td>callsign → facility</td><td><code>observed_near</code></td><td>This callsign was observed near this facility</td></tr>
+        <tr><td>callsign → prefix</td><td><code>has_prefix</code></td><td>This callsign carries this military-style prefix</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="querying">Querying the Graph</h2>
+    <h3>CLI</h3>
+    <pre># Explore an entity's graph neighborhood
+lighthouse graph --entity "Lockheed Martin" --depth 2
+lighthouse graph --entity "DARPA" --depth 2 --json
+lighthouse graph --entity "MIT Lincoln Laboratory" --depth 2 --json</pre>
+
+    <p>Depth 2 means: show the entity, its immediate connected events/signals, and any entities one hop beyond those. Depth 3 goes one further hop. The MCP server caps depth at 3.</p>
+
+    <h3>MCP Tools</h3>
+    <p>For AI agent consumption, these read-only tools are available:</p>
+    <table>
+      <thead><tr><th>Tool</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><code>get_entity_graph</code></td><td>Full subgraph around an entity (nodes + edges)</td></tr>
+        <tr><td><code>get_graph_neighbors</code></td><td>One-hop neighbors of a node</td></tr>
+        <tr><td><code>get_graph_edges_between</code></td><td>All edges between two named nodes</td></tr>
+        <tr><td><code>explain_entity_graph</code></td><td>Deterministic human-readable explanation of a graph result</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="explanation">Graph Explanation Engine</h2>
+    <p>The explanation engine (<code>modules/graph_explainer.py</code>) converts raw graph results into human-readable text without using an LLM. It maps signal labels to phrases and generates a plain-language summary of what the graph shows.</p>
+    <p>Example output: "Lockheed Martin has been connected to 3 correlation events in the last 30 days, involving ADSB military aviation signals and SEC material filings."</p>
+    <p>Explanation is deterministic — the same graph always produces the same explanation.</p>
+
+    <h2 id="backfill">Graph Backfill</h2>
+    <p>Graph persistence was added in Packet 12. Correlations recorded before that are stored in <code>correlation_events</code> but have no corresponding graph nodes or edges. The graph backfill command repairs this.</p>
+
+    <div class="callout callout-warn">
+      <strong>Important: always dry-run first</strong>
+      Backfill is idempotent (safe to re-run), but the first real run will make graph-visible any false positives from old correlation records. Review correlation quality before running on a production database with long history.
+    </div>
+
+    <pre># Step 1: Inspect what would be backfilled (no writes)
+lighthouse graph-backfill --dry-run --limit 100
+
+# Step 2: Run live
+lighthouse graph-backfill --limit 100
+
+# Step 3: Repeat with higher --limit until correlations_seen is less than limit
+lighthouse graph-backfill --limit 500</pre>
+
+    <p>Each correlation adds roughly 2–4 nodes and 3–6 edges. Repeated runs produce zero new nodes/edges (idempotent).</p>
+
+    <h3>On Start9 (via podman exec)</h3>
+    <pre>podman exec lighthouse.embassy \
+  env LIGHTHOUSE_DATA_DIR=/data DB_PATH=/data/state.db \
+  lighthouse graph-backfill --dry-run --limit 100
+
+podman exec lighthouse.embassy \
+  env LIGHTHOUSE_DATA_DIR=/data DB_PATH=/data/state.db \
+  lighthouse graph-backfill --limit 100</pre>
+
+    <h2 id="callsigns">Callsign Intelligence</h2>
+    <p>Callsigns are first-class graph nodes (Packet 25). They are enriched with normalized callsign, prefix, category, and military-style classification, and linked into the graph alongside entities, facilities, and correlation events.</p>
+
+    <div class="callout callout-info">
+      <strong>Auto-resolution</strong>
+      <code>lighthouse graph --entity PAT16</code> automatically resolves to <code>callsign:PAT16</code>. You do not need to know the node type prefix — the CLI resolves it.
+    </div>
+
+    <pre># Graph query — resolves PAT16 to callsign:PAT16 automatically
+lighthouse graph --entity PAT16 --depth 2 --json
+
+# Observation history (flat list of sightings, separate from graph)
+lighthouse callsigns --limit 20
+lighthouse callsigns --callsign PAT16 --json</pre>
+
+    <p>Live callsigns observed near DARPA HQ and Camp Lejeune: MUSL, PAT16, ZEUS31, OTIS61, ELVIS51. Each becomes a graph node on its first correlation, with temporal metadata (first seen, last seen, facility distribution) stored in node properties.</p>
+
+    <h2 id="temporal">Temporal Intelligence</h2>
+    <p>The real intelligence value is not isolated events — it is sequences and timing relationships. Lighthouse has operational temporal analysis across two modules:</p>
+
+    <table>
+      <thead><tr><th>Module</th><th>CLI</th><th>What it provides</th></tr></thead>
+      <tbody>
+        <tr><td><code>modules/temporal_analysis.py</code></td><td><code>lighthouse temporal</code></td><td>Callsign recurrence metrics, recent-activity windows, facility aggregation</td></tr>
+        <tr><td><code>modules/tempo_analysis.py</code></td><td><code>lighthouse tempo</code></td><td>Operational tempo: interval stats, weekday/hour distributions, recurring callsign identification</td></tr>
+      </tbody>
+    </table>
+
+    <pre># Recent activity (last 7 days)
+lighthouse temporal --recent 7
+
+# Callsign-specific temporal history
+lighthouse temporal --callsign PAT16 --json
+
+# Recurring callsigns with mission-pattern signatures
+lighthouse tempo --recurring
+
+# Callsign tempo: interval stats and weekday/hour distribution
+lighthouse tempo --callsign PAT16 --json</pre>
+
+    <p>See <a href="day-to-day.html#temporal">Day-to-Day Usage</a> for the full command reference.</p>
+  </main>
+</div>
+<footer>
+  <span>Lighthouse — pattern-match-sentinel</span>
+  <a href="../FUTURE_PLAN.md">Future Plan</a>
+  <a href="../ROADMAP_STATUS.md">Roadmap Status</a>
+  <a href="../OPERATIONS.md">Operations SOP</a>
+</footer>
+<script src="site.js"></script>
+</body>
+</html>

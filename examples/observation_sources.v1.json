@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "type": "repository",
+      "path": "/path/to/approved/root/example-alpha",
+      "enabled": true,
+      "profile_id": "repository_capability_discovery"
+    },
+    {
+      "type": "repository",
+      "path": "/path/to/approved/root/example-beta",
+      "enabled": true,
+      "profile_id": "repository_capability_discovery"
+    }
+  ]
+}

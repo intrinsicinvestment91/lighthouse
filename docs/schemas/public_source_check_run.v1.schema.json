@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lighthouse.local/schemas/public_source_check_run.v1.schema.json",
+  "title": "public_source_check_run.v1",
+  "description": "One operator invocation grouping its public-source checks (LHP-INTEL-04B). Reference mirror only \u2014 the authoritative enforcer is modules.public_source_check.PublicSourceCheckRun.validate().",
+  "type": "object",
+  "required": [
+    "adapter_id",
+    "adapter_version",
+    "artifact_digest",
+    "authorizes_action",
+    "background",
+    "check_ids",
+    "completed_at",
+    "completed_check_count",
+    "contacts_gateway",
+    "creates_candidate",
+    "digest_algorithm",
+    "outcome_counts",
+    "policy_digest",
+    "policy_version",
+    "run_id",
+    "run_nonce",
+    "run_status",
+    "scheduled",
+    "schema_version",
+    "started_at",
+    "target_count",
+    "target_set_digest",
+    "targets_ordered",
+    "uses_llm"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "adapter_id": {
+      "type": "string"
+    },
+    "adapter_version": {
+      "type": "string"
+    },
+    "artifact_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "authorizes_action": {
+      "const": false
+    },
+    "background": {
+      "const": false
+    },
+    "check_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^psc_[0-9a-f]{64}$"
+      }
+    },
+    "completed_at": {
+      "type": "string"
+    },
+    "completed_check_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "contacts_gateway": {
+      "const": false
+    },
+    "creates_candidate": {
+      "const": false
+    },
+    "digest_algorithm": {
+      "const": "sha256"
+    },
+    "outcome_counts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      }
+    },
+    "policy_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "policy_version": {
+      "const": "public_source_policy.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^psr_[0-9a-f]{64}$"
+    },
+    "run_nonce": {
+      "type": "string"
+    },
+    "run_status": {
+      "const": "completed"
+    },
+    "scheduled": {
+      "const": false
+    },
+    "schema_version": {
+      "const": "public_source_check_run.v1"
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "target_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "target_set_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "targets_ordered": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "uses_llm": {
+      "const": false
+    }
+  }
+}

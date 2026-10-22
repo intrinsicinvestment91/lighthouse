@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "profile_id": "scientific_preservation",
+  "profile_version": 1,
+  "display_name": "Scientific Preservation & Disclosure",
+  "description": "Preserve significant public research with provenance, and prepare reviewable, witness-signed disclosure bundles. Disclosure and any timed-release remain disabled until a dedicated dead-man's-switch safety design is separately approved.",
+  "mission": "Preserve significant research and provenance and prepare responsible, operator-approved disclosure bundles. No automatic publication; no timed release.",
+  "status": "draft",
+  "compatibility": {
+    "min_schema_version": 1,
+    "requires_data_boundary": "/data"
+  },
+  "source_policy": {
+    "allowed_source_types": [
+      "press_archives",
+      "scientific_publications",
+      "operator_document_pack"
+    ],
+    "external_intake": true
+  },
+  "collector_policy": {
+    "enabled_collectors": ["archive"],
+    "disabled_collectors": ["nostr_publish", "dms_broadcast"]
+  },
+  "observation_policy": {
+    "content_tier": "public",
+    "raw_content": false,
+    "provenance_required": true
+  },
+  "graph_policy": {"enabled": true},
+  "correlation_policy": {"enabled": true},
+  "temporal_policy": {"enabled": true, "tempo_enabled": false},
+  "privacy_policy": {
+    "local_only": true,
+    "external_model_calls": false,
+    "raw_content_export": false
+  },
+  "publishing_policy": {
+    "public_publishing": false,
+    "disclosure_package": false,
+    "requires_operator_approval": true
+  },
+  "backup_policy": {
+    "backup_required_on_activation": true,
+    "data_root": "/data/profiles/scientific_preservation"
+  },
+  "interface_policy": {
+    "local_gateway": true,
+    "mcp_read_only": true
+  },
+  "dead_mans_switch_policy": {
+    "eligible": true,
+    "enrolled": false,
+    "activated": false
+  },
+  "metadata": {
+    "owned_detector_id": "scientific_source_disappearance_review",
+    "owned_candidate_type": "disappearing_scientific_source",
+    "owned_rule_id": "public_source_disappearance_review",
+    "dms_note": "DMS eligibility here is DECLARATIVE ONLY. Production dead-man's-switch behavior is blocked pending a dedicated threat-model and state-machine initiative. Eligibility never implies enrollment or timed release.",
+    "maturity_note": "04B ledger + 04C disappearance detector shipped. CLI activation for this profile is not implemented — only RCD v2 may be activated via profile-activate. Detector tests plant active state. Disclosure packaging and any release path remain disabled."
+  }
+}

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Gateway | Lighthouse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="site-title" href="index.html"><span class="beacon"></span> Lighthouse</a>
+  <span class="header-status">YELLOW — Operational</span>
+</header>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Start Here</span>
+      <a href="index.html">Home</a>
+      <a href="overview.html">What is Lighthouse?</a>
+      <a href="capabilities.html">Capabilities</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Using It</span>
+      <a href="day-to-day.html">Day-to-Day Usage</a>
+      <a href="operator.html">Operator Guide</a>
+      <a href="targets.html">Target Profiles</a>
+      <a href="start9.html">Start9 Deployment</a>
+      <a href="local-gateway.html" class="active">Local Gateway</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Understanding It</span>
+      <a href="signals.html">Signal Sources</a>
+      <a href="graph.html">Graph Intelligence</a>
+      <a href="profiles.html">Intelligence Profiles</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="gateway-boundary.html">Gateway Boundary</a>
+      <a href="source-packs.html">Repository Source Packs</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Security & Decisions</span>
+      <a href="security.html">Security</a>
+      <a href="adr.html">Architecture Decisions</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">For Developers</span>
+      <a href="developer.html">Developer Guide</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+  </nav>
+  <main>
+    <h1>Local Gateway</h1>
+    <p class="page-intro">A private, local-only intelligence dispatch layer that makes Lighthouse data accessible to local tools and agents — without exposing anything publicly.</p>
+
+    <div class="callout callout-info">
+      <strong>Private by design</strong>
+      All <code>/local/*</code> routes enforce 127.0.0.1 or ::1 access only. Requests from any other address are rejected at the middleware level, before any query runs.
+    </div>
+
+    <h2 id="what">What the Gateway Is</h2>
+    <p>The local intelligence gateway is a bounded, read-only HTTP dispatch layer built into the Lighthouse portal. It provides five structured intelligence methods over a simple JSON API — callable from local scripts, agents, or orchestration tools running on the same machine.</p>
+    <p>It does not replace the CLI or MCP server. It provides a different access pattern: structured request/response over HTTP, without requiring a persistent MCP connection or shell access.</p>
+
+    <h2 id="what-not">What It Is Not</h2>
+    <ul>
+      <li><strong>Not a public API</strong> — no auth token, no rate limiting beyond local enforcement; never expose to external networks</li>
+      <li><strong>Not autonomous control</strong> — read-only; cannot trigger pipeline runs, write to the DB, or publish to Nostr</li>
+      <li><strong>Not a SaaS endpoint</strong> — private, self-hosted, local-first</li>
+      <li><strong>Not an LLM interface</strong> — deterministic, bounded queries; no generative output</li>
+    </ul>
+
+    <h2 id="starting">Starting the Portal</h2>
+    <p>The gateway is part of the portal. Start it with:</p>
+    <pre>pip install -e ".[portal]"
+uvicorn portal.app:app --host 127.0.0.1 --port 8080</pre>
+
+    <div class="callout callout-warn">
+      <strong>Bind to 127.0.0.1, not 0.0.0.0</strong>
+      Binding to 0.0.0.0 on a networked machine exposes the portal to your local network. The <code>/local/*</code> routes still enforce IP, but other portal routes (DMS, alerts) would be exposed. Use 127.0.0.1 unless you understand the exposure.
+    </div>
+
+    <p>On Start9, the portal is always bound to the container-local address. The <code>/local/*</code> routes are accessible from within the container or via <code>podman exec</code>.</p>
+
+    <h2 id="routes">HTTP Routes</h2>
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>GET</code></td><td><code>/local/health</code></td><td>Liveness check — returns <code>{"status": "ok", "service": "lighthouse-local-gateway"}</code></td></tr>
+        <tr><td><code>GET</code></td><td><code>/local/methods</code></td><td>List all allowed intelligence method names</td></tr>
+        <tr><td><code>POST</code></td><td><code>/local/request</code></td><td>Dispatch an intelligence query — body: <code>{"method": "...", "params": {...}}</code></td></tr>
+      </tbody>
+    </table>
+
+    <pre># Verify the gateway is alive
+curl http://127.0.0.1:8080/local/health
+
+# List available methods
+curl http://127.0.0.1:8080/local/methods</pre>
+
+    <h2 id="methods">Intelligence Methods</h2>
+    <p>All methods are dispatched via <code>POST /local/request</code>. Each is bounded: <code>MAX_DEPTH=3</code>, <code>MAX_LIMIT=50</code>. Raw alert evidence is stripped from all responses.</p>
+
+    <h3 id="callsign-summary">callsign.summary</h3>
+    <p>Returns enrichment metadata and operational tempo for a specific callsign. Combines observation history with recurrence patterns.</p>
+    <pre>curl -s -X POST http://127.0.0.1:8080/local/request \
+  -H "Content-Type: application/json" \
+  -d '{"method": "callsign.summary", "params": {"callsign": "PAT16"}}'</pre>
+    <p>Returns: observation count, first/last seen, facility distribution, tempo metrics, enrichment (prefix, category, military classification).</p>
+
+    <h3 id="facility-summary">facility.summary</h3>
+    <p>Returns recent aviation activity and recurring callsigns at a named facility.</p>
+    <pre>curl -s -X POST http://127.0.0.1:8080/local/request \
+  -H "Content-Type: application/json" \
+  -d '{"method": "facility.summary", "params": {"facility": "DARPA HQ"}}'</pre>
+    <p>Returns: recent callsigns observed, activity counts by day, top recurring callsigns, facility observation window.</p>
+
+    <h3 id="correlations-recent">correlations.recent</h3>
+    <p>Returns the most recent scored correlation events. Evidence payloads are stripped — only metadata and scores are returned.</p>
+    <pre>curl -s -X POST http://127.0.0.1:8080/local/request \
+  -H "Content-Type: application/json" \
+  -d '{"method": "correlations.recent", "params": {"limit": 10}}'</pre>
+    <p>Returns: entity, event_type, score, signals, summary, timestamp. Never raw alert payloads.</p>
+
+    <h3 id="graph-summary">graph.summary</h3>
+    <p>Returns the graph subgraph around a named entity — nodes and edges up to the configured depth.</p>
+    <pre>curl -s -X POST http://127.0.0.1:8080/local/request \
+  -H "Content-Type: application/json" \
+  -d '{"method": "graph.summary", "params": {"entity": "DARPA", "depth": 2}}'</pre>
+    <p>Supports the same auto-resolution as the CLI: <code>"entity": "PAT16"</code> resolves to <code>callsign:PAT16</code>. Depth is capped at <code>MAX_DEPTH=3</code>.</p>
+
+    <h3 id="daily-brief">intelligence.daily_brief</h3>
+    <p>Returns a cross-domain summary: recent correlations, active callsigns, and a graph snapshot. Designed for daily review or agent ingestion.</p>
+    <pre>curl -s -X POST http://127.0.0.1:8080/local/request \
+  -H "Content-Type: application/json" \
+  -d '{"method": "intelligence.daily_brief", "params": {}}'</pre>
+    <p>Returns: top recent correlations (evidence stripped), most-observed callsigns in the last 7 days, summary graph statistics. No raw evidence, no personal data.</p>
+
+    <h2 id="bounds">Bounds and Safety</h2>
+    <table>
+      <thead><tr><th>Constraint</th><th>Value</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Max graph depth</td><td>3</td><td>Prevents runaway BFS traversal on large graphs</td></tr>
+        <tr><td>Max result limit</td><td>50</td><td>Keeps responses well-sized for local processing</td></tr>
+        <tr><td>Evidence stripping</td><td>Always</td><td>Raw alert payloads are internal; only scored summaries go out</td></tr>
+        <tr><td>Read-only</td><td>Always</td><td>No write path exists in the gateway layer</td></tr>
+        <tr><td>IP enforcement</td><td>127.0.0.1 / ::1</td><td>Rejected at middleware before any query runs</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="start9">On Start9</h2>
+    <p>The portal runs as a service inside the Lighthouse container. From within the container (via <code>podman exec</code>), the gateway is accessible at <code>http://127.0.0.1:8080/local/...</code>.</p>
+    <pre># Health check from inside the container
+podman exec lighthouse.embassy \
+  curl -s http://127.0.0.1:8080/local/health
+
+# Daily brief from inside the container
+podman exec lighthouse.embassy \
+  curl -s -X POST http://127.0.0.1:8080/local/request \
+  -H "Content-Type: application/json" \
+  -d '{"method": "intelligence.daily_brief", "params": {}}'</pre>
+
+    <p>The gateway does not need additional configuration — it reads from the same <code>DB_PATH</code>
+    (explicit or derived from <code>LIGHTHOUSE_DATA_DIR</code>) and <code>LIGHTHOUSE_DATA_DIR</code> as
+    the rest of the pipeline.</p>
+
+    <h2 id="agent-use">Agent and Orchestration Use</h2>
+    <p>The gateway is designed for local agents (BitAgent, shell scripts, or any tool that can make HTTP requests) to query Lighthouse intelligence without shell access. The stable JSON schema means results are easy to parse and forward.</p>
+    <p>A typical orchestration pattern:</p>
+    <ol>
+      <li>Agent calls <code>intelligence.daily_brief</code> to get a cross-domain summary</li>
+      <li>Agent filters for high-score correlations or interesting callsigns</li>
+      <li>Agent calls <code>callsign.summary</code> or <code>graph.summary</code> to drill into specifics</li>
+      <li>Agent formats and presents the findings — Lighthouse has already done the correlation work</li>
+    </ol>
+
+    <div class="callout callout-info">
+      <strong>Module source</strong>
+      Gateway logic lives in <code>modules/local_gateway.py</code>. The FastAPI routes are in <code>portal/app.py</code> under the <code>/local</code> prefix. The Pydantic request model is <code>GatewayRequest</code> in <code>portal/models.py</code>.
+    </div>
+  </main>
+</div>
+<footer>
+  <span>Lighthouse — pattern-match-sentinel</span>
+  <a href="../FUTURE_PLAN.md">Future Plan</a>
+  <a href="../ROADMAP_STATUS.md">Roadmap Status</a>
+  <a href="../OPERATIONS.md">Operations SOP</a>
+</footer>
+<script src="site.js"></script>
+</body>
+</html>

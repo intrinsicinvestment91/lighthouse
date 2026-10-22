@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "profile_id": "public_scientific_lighthouse",
+  "profile_version": 1,
+  "display_name": "Public Scientific Lighthouse",
+  "description": "The original public-interest mission: watch and preserve public scientific, aerospace, and energy signals, and prepare responsible disclosures for independent researchers and self-hosters.",
+  "mission": "Turn scattered public scientific/aerospace/energy information into structured, preservable intelligence; support responsible public-interest disclosure. Never auto-publish; operator approval always required.",
+  "status": "ready_for_validation",
+  "compatibility": {
+    "min_schema_version": 1,
+    "requires_data_boundary": "/data"
+  },
+  "source_policy": {
+    "allowed_source_types": [
+      "scientific_publications",
+      "press_archives",
+      "regulatory_filings",
+      "patents",
+      "aviation_signals",
+      "institutional_pages"
+    ],
+    "external_intake": true
+  },
+  "collector_policy": {
+    "enabled_collectors": ["sec", "arxiv", "flight", "adsb", "narrative", "archive", "patent"],
+    "disabled_collectors": ["dms_broadcast"]
+  },
+  "observation_policy": {
+    "content_tier": "public",
+    "raw_content": false
+  },
+  "graph_policy": {"enabled": true},
+  "correlation_policy": {"enabled": true, "min_publish_score": 7.0},
+  "temporal_policy": {"enabled": true, "tempo_enabled": true},
+  "privacy_policy": {
+    "local_only": false,
+    "external_model_calls": false,
+    "raw_content_export": false
+  },
+  "publishing_policy": {
+    "public_publishing": false,
+    "gated_correlations_only": true,
+    "requires_operator_approval": true,
+    "allowed_fields": ["entity", "event_type", "score", "signals", "summary"]
+  },
+  "backup_policy": {
+    "backup_required_on_activation": true,
+    "data_root": "/data"
+  },
+  "interface_policy": {
+    "local_gateway": true,
+    "mcp_read_only": true
+  },
+  "dead_mans_switch_policy": {"eligible": false},
+  "metadata": {
+    "maturity_note": "Preserves the original mission as a first-class selectable profile. Not production-active; activation is not implemented in this packet."
+  }
+}

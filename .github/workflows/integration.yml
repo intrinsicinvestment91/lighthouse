@@ -1,0 +1,32 @@
+name: Integration Tests
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # 06:00 UTC daily
+  workflow_dispatch:
+
+jobs:
+  integration:
+    name: Integration Tests (live APIs)
+    runs-on: ubuntu-latest
+    env:
+      WIPO_API_KEY: ${{ secrets.WIPO_API_KEY }}
+      NOSTR_PRIVATE_KEY_HEX: ${{ secrets.NOSTR_PRIVATE_KEY_HEX }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements-dev.lock -r requirements-portal.lock
+      - run: pip install --no-deps -e .
+      - run: playwright install chromium --with-deps
+      - run: python -m pytest tests/integration -m integration -v --tb=short --junitxml=integration-results.xml
+      # Refuse a run that proved nothing: `python -m pytest` exits 0 when every test skips.
+      # The floor is the size of the credential-free set; see the script docstring.
+      - run: python scripts/check_integration_not_vacuous.py --min-passed 7 integration-results.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-results
+          path: integration-results.xml

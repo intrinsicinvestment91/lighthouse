@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Troubleshooting | Lighthouse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="site-title" href="index.html"><span class="beacon"></span> Lighthouse</a>
+  <span class="header-status">YELLOW — Operational</span>
+</header>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Start Here</span>
+      <a href="index.html">Home</a>
+      <a href="overview.html">What is Lighthouse?</a>
+      <a href="capabilities.html">Capabilities</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Using It</span>
+      <a href="day-to-day.html">Day-to-Day Usage</a>
+      <a href="operator.html">Operator Guide</a>
+      <a href="targets.html">Target Profiles</a>
+      <a href="start9.html">Start9 Deployment</a>
+      <a href="local-gateway.html">Local Gateway</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Understanding It</span>
+      <a href="signals.html">Signal Sources</a>
+      <a href="graph.html">Graph Intelligence</a>
+      <a href="profiles.html">Intelligence Profiles</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="gateway-boundary.html">Gateway Boundary</a>
+      <a href="source-packs.html">Repository Source Packs</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Security & Decisions</span>
+      <a href="security.html">Security</a>
+      <a href="adr.html">Architecture Decisions</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">For Developers</span>
+      <a href="developer.html">Developer Guide</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="troubleshooting.html" class="active">Troubleshooting</a>
+    </div>
+  </nav>
+  <main>
+    <h1>Troubleshooting</h1>
+    <p class="page-intro">Common operational problems with symptoms, likely causes, and safe fixes.</p>
+
+    <h2 id="patent">Patent module produces no output</h2>
+    <table>
+      <tbody>
+        <tr><th>Symptom</th><td>No patent alerts. Logs may say provider is disabled.</td></tr>
+        <tr><th>Likely cause</th><td>Patent provider is <code>disabled</code> by default. The old PatentsView endpoint (<code>search.patentsview.org</code>) was decommissioned in 2026.</td></tr>
+        <tr><th>How to check</th><td><code>python -c "from modules.patent_sentinel import check_patent_provider_health; import asyncio; print(asyncio.run(check_patent_provider_health()))"</code></td></tr>
+        <tr><th>Safe fix</th><td>This is expected behavior. The pipeline runs normally without patent collection. To re-enable the legacy path: <code>PATENT_PROVIDER=legacy_patentsview</code> (only if you have a confirmed working endpoint). The USPTO ODP adapter is planned for a future packet.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="no-targets">Targeted mode runs nothing / missing targets</h2>
+    <table>
+      <tbody>
+        <tr><th>Symptom</th><td><code>lighthouse --module targeted</code> runs but collects nothing. <code>lighthouse targets</code> shows empty or unexpected profiles.</td></tr>
+        <tr><th>Likely cause</th><td><code>data/targets.json</code> does not exist, is invalid, or all profiles are disabled.</td></tr>
+        <tr><th>How to check</th><td><code>lighthouse targets</code> — validates and shows routing plan. <code>cat data/targets.json</code> to inspect the file.</td></tr>
+        <tr><th>Safe fix</th><td>If missing, copy the seed: <code>cp seed/targets.json data/targets.json</code>. Validate: <code>lighthouse targets --show-routes</code>. Check that at least one profile has <code>"enabled": true</code> and the signals you want.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="start9-wipe">Start9 data wiped after reinstall</h2>
+    <table>
+      <tbody>
+        <tr><th>Symptom</th><td>After updating or reinstalling the Start9 package, all historical data is gone. <code>lighthouse correlations</code> returns nothing.</td></tr>
+        <tr><th>Likely cause</th><td>StartOS performed a volume reset on uninstall. A same-version reinstall (stop → uninstall → install → start) wipes <code>/data</code>.</td></tr>
+        <tr><th>How to check</th><td><code>podman exec lighthouse.embassy env LIGHTHOUSE_DATA_DIR=/data DB_PATH=/data/state.db lighthouse status</code></td></tr>
+        <tr><th>Safe fix</th><td>If you had a StartOS backup, restore it: Lighthouse → Actions → Restore Backup. If no backup exists, the data is lost. Going forward: always create a StartOS backup before any package update. Use Update (not uninstall + reinstall).</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="empty-graph">Graph queries return empty results</h2>
+    <table>
+      <tbody>
+        <tr><th>Symptom</th><td><code>lighthouse graph --entity "DARPA" --depth 2</code> returns no nodes or edges, even though correlations exist.</td></tr>
+        <tr><th>Likely cause</th><td>Historical correlations were recorded before graph persistence was enabled (Packet 12), or after a database restore without running graph backfill.</td></tr>
+        <tr><th>How to check</th><td><code>lighthouse correlations --limit 10</code> — if this returns correlations but graph returns nothing, backfill is needed.</td></tr>
+        <tr><th>Safe fix</th><td>Run graph backfill (always dry-run first):<br><code>lighthouse graph-backfill --dry-run --limit 100</code><br><code>lighthouse graph-backfill --limit 100</code></td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="no-callsigns">No callsign observations</h2>
+    <table>
+      <tbody>
+        <tr><th>Symptom</th><td><code>lighthouse callsigns</code> returns nothing.</td></tr>
+        <tr><th>Likely cause</th><td>Either no live runs have completed yet, the runs were dry-runs (callsigns are not persisted during dry-run), or the callsign_observations table has not been initialized.</td></tr>
+        <tr><th>How to check</th><td>Confirm at least one non-dry-run has completed. Check the DB: <code>sqlite3 data/state.db "SELECT COUNT(*) FROM callsign_observations;"</code></td></tr>
+        <tr><th>Safe fix</th><td>Run a non-dry-run: <code>lighthouse --module adsb --since-days 1</code>. Callsigns are persisted on non-dry-run ADSB and flight runs.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="nostr-not-publishing">Nostr not publishing</h2>
+    <table>
+      <tbody>
+        <tr><th>Symptom</th><td>No Nostr events published despite correlations existing.</td></tr>
+        <tr><th>Likely cause</th><td>One of the four publishing gate conditions is not met: <code>NOSTR_PUBLISH_CORRELATIONS</code> is not <code>true</code>, no correlation scored ≥ 7.0, or no correlation had ≥ 2 unique signals.</td></tr>
+        <tr><th>How to check</th><td>Check the log for "skipping nostr publish" lines. Review correlation scores: <code>lighthouse correlations --limit 10</code>.</td></tr>
+        <tr><th>Safe fix</th><td>Zero publish events is normal when no correlation passes the gate. Do not lower thresholds to force publication. Ensure <code>NOSTR_PRIVATE_KEY_HEX</code>, <code>NOSTR_RELAYS</code>, and <code>NOSTR_PUBLISH_CORRELATIONS=true</code> are set if you expect publishing.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="anthropic-key">Narrative analyzer skipped</h2>
+    <table>
+      <tbody>
+        <tr><th>Symptom</th><td>No narrative alerts. Log says "narrative module skipped."</td></tr>
+        <tr><th>Likely cause</th><td><code>ANTHROPIC_API_KEY</code> is not set.</td></tr>
+        <tr><th>How to check</th><td><code>echo $ANTHROPIC_API_KEY</code></td></tr>
+        <tr><th>Safe fix</th><td>Set <code>ANTHROPIC_API_KEY</code> in your <code>.env</code> file. The narrative module is optional — the pipeline runs fine without it.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="archive-access">Archive collection fails or returns few pages</h2>
+    <table>
+      <tbody>
+        <tr><th>Symptom</th><td>Very few archived pages, or archive module errors in logs.</td></tr>
+        <tr><th>Likely cause</th><td>DoD redirected from defense.gov to war.gov (archiver follows redirects, but the URL may need updating in config). DoE has no verified RSS feed — HTML selector fallback may break when the newsroom changes layout. IPFS daemon unavailable (pages save locally, not pinned).</td></tr>
+        <tr><th>How to check</th><td>Check logs for specific URL failures. Test connectivity: <code>curl -L https://www.defense.gov/News/News-Releases/</code></td></tr>
+        <tr><th>Safe fix</th><td>Without IPFS, pages still save to <code>data/archives/</code> — this is acceptable for early production. For the DoD redirect: update <code>ArchiveConfig.targets</code> in <code>config.py</code> to the confirmed canonical URL once known.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="ipfs">IPFS unavailable</h2>
+    <table>
+      <tbody>
+        <tr><th>Symptom</th><td>Archive module logs IPFS errors. Pages saved locally but not pinned.</td></tr>
+        <tr><th>Likely cause</th><td>IPFS daemon is not running, or <code>IPFS_API_URL</code> is wrong.</td></tr>
+        <tr><th>How to check</th><td><code>curl http://127.0.0.1:5001/api/v0/version</code></td></tr>
+        <tr><th>Safe fix</th><td>This is non-blocking. Pages are saved locally to <code>data/archives/</code>. Start the IPFS daemon if you need pinning: <code>ipfs daemon &amp;</code>. Or use a pinning service (<code>IPFS_PINNING_SERVICE=pinata</code> with <code>PINATA_JWT</code>).</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="arxiv-rate-limit">arXiv rate limits (429)</h2>
+    <table>
+      <tbody>
+        <tr><th>Symptom</th><td>arXiv sentinel logs HTTP 429 errors. No researcher alerts.</td></tr>
+        <tr><th>Likely cause</th><td>arXiv rate limiting. The arXiv API has conservative rate limits for automated clients.</td></tr>
+        <tr><th>How to check</th><td>Look for "429" in logs for the arxiv_sentinel module.</td></tr>
+        <tr><th>Safe fix</th><td>This is non-blocking — the module logs the rate limit and exits cleanly. Other modules continue. Run arXiv less frequently (daily rather than every 6 hours) if rate limits are persistent.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="entities-drift">SEC entity matching misses a company</h2>
+    <table>
+      <tbody>
+        <tr><th>Symptom</th><td>You expect SEC alerts for a company but see none, even though they have recent 8-K filings on EDGAR.</td></tr>
+        <tr><th>Likely cause</th><td>The company's CIK in <code>data/entities.json</code> is wrong or stale. EDGAR CIK-to-company mappings occasionally change.</td></tr>
+        <tr><th>How to check</th><td><code>python scripts/validate_entities.py data/entities.json</code></td></tr>
+        <tr><th>Safe fix</th><td>Verify the CIK at <code>https://www.sec.gov/cgi-bin/browse-edgar?company=&amp;CIK=&lt;CIK&gt;&amp;action=getcompany</code>. Update <code>data/entities.json</code> with the correct CIK. Re-run validation.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="start9-podman">podman exec commands fail on Start9</h2>
+    <table>
+      <tbody>
+        <tr><th>Symptom</th><td><code>podman exec lighthouse.embassy lighthouse status</code> fails with "variable not set" or wrong paths.</td></tr>
+        <tr><th>Likely cause</th><td><code>podman exec</code> does not inherit the entrypoint's exported env vars. Environment must be passed explicitly.</td></tr>
+        <tr><th>How to check</th><td>Run with explicit env: <code>podman exec lighthouse.embassy env LIGHTHOUSE_DATA_DIR=/data DB_PATH=/data/state.db lighthouse status</code></td></tr>
+        <tr><th>Safe fix</th><td>Include <code>env LIGHTHOUSE_DATA_DIR=/data DB_PATH=/data/state.db</code> in every <code>podman exec</code> command on Start9 (matches the entrypoint contract; <code>DB_PATH</code> also derives in-app when unset, but <code>podman exec</code> does not inherit the entrypoint env). See <a href="start9.html">Start9 Deployment</a> for full examples.</td></tr>
+      </tbody>
+    </table>
+  </main>
+</div>
+<footer>
+  <span>Lighthouse — pattern-match-sentinel</span>
+  <a href="../FUTURE_PLAN.md">Future Plan</a>
+  <a href="../ROADMAP_STATUS.md">Roadmap Status</a>
+  <a href="../OPERATIONS.md">Operations SOP</a>
+</footer>
+<script src="site.js"></script>
+</body>
+</html>

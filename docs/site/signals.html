@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signal Sources | Lighthouse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="site-title" href="index.html"><span class="beacon"></span> Lighthouse</a>
+  <span class="header-status">YELLOW — Operational</span>
+</header>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Start Here</span>
+      <a href="index.html">Home</a>
+      <a href="overview.html">What is Lighthouse?</a>
+      <a href="capabilities.html">Capabilities</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Using It</span>
+      <a href="day-to-day.html">Day-to-Day Usage</a>
+      <a href="operator.html">Operator Guide</a>
+      <a href="targets.html">Target Profiles</a>
+      <a href="start9.html">Start9 Deployment</a>
+      <a href="local-gateway.html">Local Gateway</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Understanding It</span>
+      <a href="signals.html" class="active">Signal Sources</a>
+      <a href="graph.html">Graph Intelligence</a>
+      <a href="profiles.html">Intelligence Profiles</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="gateway-boundary.html">Gateway Boundary</a>
+      <a href="source-packs.html">Repository Source Packs</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Security & Decisions</span>
+      <a href="security.html">Security</a>
+      <a href="adr.html">Architecture Decisions</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">For Developers</span>
+      <a href="developer.html">Developer Guide</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+  </nav>
+  <main>
+    <h1>Signal Sources</h1>
+    <p class="page-intro">What each collector watches, why it matters, and current status and limitations.</p>
+
+    <h2 id="sec">SEC Filings</h2>
+    <table>
+      <tbody>
+        <tr><th>Module</th><td><code>modules/sec_sentinel.py</code></td></tr>
+        <tr><th>Status</th><td><span class="status-live">Live</span></td></tr>
+        <tr><th>Data source</th><td>SEC EDGAR full-text search API (no auth required)</td></tr>
+      </tbody>
+    </table>
+    <h4>What it collects</h4>
+    <p>Material event 8-K filings from watched companies. Flags specific items: 1.01 (material agreements), 1.02 (terminations), 2.01 (acquisitions), 5.02 (director/officer changes), 8.01 (other material events).</p>
+    <h4>Why it matters</h4>
+    <p>8-K items 1.01 and 2.01 often signal government contract awards, joint ventures, or acquisitions involving defense or aerospace contractors. When combined with ADSB military aviation activity near the same facility in the same week, the correlation is meaningful.</p>
+    <h4>Known limitations</h4>
+    <p>Alert deduplication uses stable filing identity (accession number + company + form type). Entity matching relies on CIK-based EDGAR submissions API lookups rather than text search, reducing false positives from similarly named entities.</p>
+    <h4>Future improvements</h4>
+    <p>Per-entity EDGAR CIK validation before each production run. Improved item classification for 8-K subtypes.</p>
+
+    <hr>
+
+    <h2 id="adsb">ADSB (Aircraft Transponder Data)</h2>
+    <table>
+      <tbody>
+        <tr><th>Module</th><td><code>modules/adsb_sentinel.py</code></td></tr>
+        <tr><th>Status</th><td><span class="status-live">Live — strongest signal source</span></td></tr>
+        <tr><th>Data source</th><td>adsb.lol community feed (no API key required for community tier)</td></tr>
+      </tbody>
+    </table>
+    <h4>What it collects</h4>
+    <p>Real-time aircraft transponder data around 7 configured facilities. Flags aircraft with:</p>
+    <ul>
+      <li>ICAO hex codes in the AE-range (U.S. military aircraft, hard evidence)</li>
+      <li>Known military-style callsign prefixes (PAT, RCH, REACH, MUSL, ZEUS, OTIS, ELVIS, NOBLE, DUKE, etc.)</li>
+      <li>The upstream <code>military=true</code> flag from the feed</li>
+    </ul>
+    <h4>Why it matters</h4>
+    <p>Military aircraft near defense research facilities are operationally significant. Recurrent callsigns (the same callsign at the same facility across multiple runs) may indicate routine operational activity or a specific program. ADSB + SEC correlations have been the strongest live signal in production runs.</p>
+    <h4>Known limitations</h4>
+    <p>AE-range classification is hard evidence. Callsign-prefix classification is a soft hint — it does not prove the aircraft is military-assigned, only that the callsign format matches known patterns. Facility coverage depends on the adsb.lol feed's geographic availability.</p>
+    <h4>Future improvements</h4>
+    <p>Graph-native callsigns (Packet planned): recurring callsigns become first-class graph entities, enabling temporal pattern analysis — "this callsign has appeared at this facility on 3 Tuesdays this month."</p>
+
+    <hr>
+
+    <h2 id="flight">Flight Tracker (OpenSky)</h2>
+    <table>
+      <tbody>
+        <tr><th>Module</th><td><code>modules/flight_tracker.py</code></td></tr>
+        <tr><th>Status</th><td><span class="status-live">Live</span></td></tr>
+        <tr><th>Data source</th><td>OpenSky Network API (anonymous: 10 req/10s; authenticated: 100 req/10s)</td></tr>
+      </tbody>
+    </table>
+    <h4>What it collects</h4>
+    <p>Flight data around key facilities, with the same military/interesting classification as the ADSB sentinel. Includes callsign enrichment metadata from <code>modules/callsigns.py</code>.</p>
+    <h4>Why it matters</h4>
+    <p>Complements the ADSB feed with different geographic and aircraft coverage. OpenSky can cover aircraft that adsb.lol misses in some regions.</p>
+    <h4>Known limitations</h4>
+    <p>Anonymous rate limits are restrictive. Set <code>OPENSKY_USER</code>/<code>OPENSKY_PASS</code> for the authenticated tier.</p>
+
+    <hr>
+
+    <h2 id="arxiv">arXiv Research Sentinel</h2>
+    <table>
+      <tbody>
+        <tr><th>Module</th><td><code>modules/arxiv_sentinel.py</code></td></tr>
+        <tr><th>Status</th><td><span class="status-live">Live</span></td></tr>
+        <tr><th>Data source</th><td>arXiv Atom API (no auth required)</td></tr>
+      </tbody>
+    </table>
+    <h4>What it collects</h4>
+    <p>Publication activity for a tracked roster of researchers (from <code>seed/researchers.json</code>). Flags unusual silence when a frequently-publishing researcher stops publishing past a threshold.</p>
+    <h4>Why it matters</h4>
+    <p>Research silence can precede classified work, NDA periods, or program transitions. Combined with SEC or ADSB signals, arXiv silence adds corroborating context to a correlation event.</p>
+    <h4>Known limitations</h4>
+    <p>May hit rate limits (HTTP 429). This is non-blocking — the module skips and logs. Per-researcher cadence baselines are not yet implemented, so silence thresholds are not individually calibrated.</p>
+    <h4>Future improvements</h4>
+    <p>Per-researcher cadence baselines and individually calibrated silence thresholds.</p>
+
+    <hr>
+
+    <h2 id="archive">Archive / Wayback</h2>
+    <table>
+      <tbody>
+        <tr><th>Module</th><td><code>modules/wayback_archiver.py</code></td></tr>
+        <tr><th>Status</th><td><span class="status-degraded">Partial — feed-first; DoE HTML-only</span></td></tr>
+        <tr><th>Data source</th><td>DoD, NASA, DoE newsroom websites (Playwright + RSS)</td></tr>
+      </tbody>
+    </table>
+    <h4>What it collects</h4>
+    <p>Press releases and news pages from government agency newsrooms. Archives pages locally and optionally pins to IPFS. Uses RSS/Atom feed-first discovery with HTML link fallback.</p>
+    <h4>Why it matters</h4>
+    <p>Agency press releases often precede or follow significant program events. Archiving them creates a persistent record and feeds the narrative analyzer.</p>
+    <h4>Known limitations</h4>
+    <p>DoD (defense.gov) has redirected to war.gov — the archiver follows the redirect transparently but the config should be updated once a canonical URL is confirmed. DoE has no verified RSS feed yet — HTML selector fallback is less reliable. IPFS must be running locally for pinning; without it, pages save locally only.</p>
+
+    <hr>
+
+    <h2 id="narrative">Narrative Analyzer</h2>
+    <table>
+      <tbody>
+        <tr><th>Module</th><td><code>modules/narrative_analyzer.py</code></td></tr>
+        <tr><th>Status</th><td><span class="status-degraded">Optional — requires <code>ANTHROPIC_API_KEY</code></span></td></tr>
+        <tr><th>Data source</th><td>Archived press releases (output of wayback_archiver)</td></tr>
+      </tbody>
+    </table>
+    <h4>What it collects</h4>
+    <p>LLM-scored urgency and specificity for each archived press release. Flags tone shifts — press releases that are significantly more urgent or specific than the baseline for that agency.</p>
+    <h4>Why it matters</h4>
+    <p>A sudden change in agency communication tone can indicate an upcoming announcement or operational change before it becomes publicly known. The signal is weak on its own but can add weight to multi-source correlations.</p>
+    <h4>Known limitations</h4>
+    <p>Quality is limited mainly by archive source quality, not the analyzer itself. Without <code>ANTHROPIC_API_KEY</code>, this module is skipped entirely. The model is <code>claude-haiku-4-5-20251001</code> by default (configurable in <code>narrative_cfg.model</code>).</p>
+
+    <div class="callout callout-info">
+      <strong>LLM use is isolated to the edge</strong>
+      Narrative analysis is the only place Lighthouse uses an LLM. The core pipeline (correlation, scoring, graph, explanation) is fully deterministic. No LLM is used in the pipeline core.
+    </div>
+
+    <hr>
+
+    <h2 id="patents">Patent Sentinel</h2>
+    <table>
+      <tbody>
+        <tr><th>Module</th><td><code>modules/patent_sentinel.py</code></td></tr>
+        <tr><th>Status</th><td><span class="status-degraded">Gracefully disabled by default</span></td></tr>
+        <tr><th>Data source</th><td>USPTO PatentsView (decommissioned) / USPTO ODP (planned)</td></tr>
+      </tbody>
+    </table>
+    <h4>What it collects</h4>
+    <p>Patent filings by watched assignees, and patent filing velocity anomalies (spikes &gt;2σ or unusual freezes by IPC class).</p>
+    <h4>Why it matters</h4>
+    <p>A surge of patent filings in a specific technology class by a defense contractor can signal a technology maturation event. Combined with SEC and ADSB signals, patent velocity adds longer-term context.</p>
+    <h4>Current status</h4>
+    <p>The old PatentsView API endpoint (<code>search.patentsview.org</code>) was decommissioned in 2026. The default provider is <code>disabled</code>, which produces no errors and no output. The pipeline continues normally.</p>
+    <p>To re-enable: <code>PATENT_PROVIDER=legacy_patentsview</code> (requires a working endpoint). A future <code>odp</code> provider will implement the USPTO Open Data Portal adapter once the schema is confirmed.</p>
+    <h4>Future improvements</h4>
+    <p>USPTO ODP adapter implementation. This is lower priority than graph and callsign work while the provider is gracefully disabled.</p>
+  </main>
+</div>
+<footer>
+  <span>Lighthouse — pattern-match-sentinel</span>
+  <a href="../FUTURE_PLAN.md">Future Plan</a>
+  <a href="../ROADMAP_STATUS.md">Roadmap Status</a>
+  <a href="../OPERATIONS.md">Operations SOP</a>
+</footer>
+<script src="site.js"></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "profile_id": "fusion_research_monitoring",
+  "profile_version": 1,
+  "display_name": "Fusion & Advanced Research Monitoring",
+  "description": "Track fusion and advanced-energy research institutions (LLNL/NIF, Commonwealth Fusion, Helion) via arXiv researcher rosters, patents, and press-release narrative shifts.",
+  "mission": "Follow advanced fusion and plasma research signals across publications, filings, and institutional communications, producing correlations for operator review.",
+  "status": "draft",
+  "compatibility": {
+    "min_schema_version": 1,
+    "requires_data_boundary": "/data"
+  },
+  "source_policy": {
+    "allowed_source_types": ["scientific_publications", "patents", "press_archives"],
+    "external_intake": true
+  },
+  "collector_policy": {
+    "enabled_collectors": ["arxiv", "patent", "narrative"],
+    "disabled_collectors": ["dms_broadcast"]
+  },
+  "observation_policy": {
+    "content_tier": "public",
+    "raw_content": false
+  },
+  "graph_policy": {"enabled": true},
+  "correlation_policy": {"enabled": true, "min_publish_score": 7.0},
+  "temporal_policy": {"enabled": true, "tempo_enabled": false},
+  "privacy_policy": {
+    "local_only": false,
+    "external_model_calls": false,
+    "raw_content_export": false
+  },
+  "publishing_policy": {
+    "public_publishing": false,
+    "gated_correlations_only": true,
+    "requires_operator_approval": true,
+    "allowed_fields": ["entity", "event_type", "score", "signals", "summary"]
+  },
+  "backup_policy": {
+    "backup_required_on_activation": true,
+    "data_root": "/data/profiles/fusion_research_monitoring"
+  },
+  "interface_policy": {
+    "local_gateway": true,
+    "mcp_read_only": true
+  },
+  "dead_mans_switch_policy": {"eligible": false},
+  "metadata": {
+    "maturity_note": "Architectural seed. Patent provider remains disabled by default per current graceful-degradation policy."
+  }
+}

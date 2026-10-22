@@ -1,0 +1,8 @@
+{
+  "schema_version": "public_source_targets.v1",
+  "targets": [
+    {
+      "locator": "https://archive.example.org/dataset.csv"
+    }
+  ]
+}

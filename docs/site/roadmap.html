@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roadmap | Lighthouse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="site-title" href="index.html"><span class="beacon"></span> Lighthouse</a>
+  <span class="header-status">YELLOW — Operational</span>
+</header>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Start Here</span>
+      <a href="index.html">Home</a>
+      <a href="overview.html">What is Lighthouse?</a>
+      <a href="capabilities.html">Capabilities</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Using It</span>
+      <a href="day-to-day.html">Day-to-Day Usage</a>
+      <a href="operator.html">Operator Guide</a>
+      <a href="targets.html">Target Profiles</a>
+      <a href="start9.html">Start9 Deployment</a>
+      <a href="local-gateway.html">Local Gateway</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Understanding It</span>
+      <a href="signals.html">Signal Sources</a>
+      <a href="graph.html">Graph Intelligence</a>
+      <a href="profiles.html">Intelligence Profiles</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="gateway-boundary.html">Gateway Boundary</a>
+      <a href="source-packs.html">Repository Source Packs</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Security & Decisions</span>
+      <a href="security.html">Security</a>
+      <a href="adr.html">Architecture Decisions</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">For Developers</span>
+      <a href="developer.html">Developer Guide</a>
+      <a href="roadmap.html" class="active">Roadmap</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+  </nav>
+  <main>
+    <h1>Roadmap</h1>
+    <p class="page-intro">Where Lighthouse is going, organized by architecture <strong>phase</strong>.
+    Canonical direction: <a href="../ROADMAP.md">docs/ROADMAP.md</a>. Current status:
+    <a href="../ROADMAP_STATUS.md">docs/ROADMAP_STATUS.md</a>. History:
+    <a href="../PACKETS.md">docs/PACKETS.md</a>.</p>
+
+    <h2 id="status">Current Status</h2>
+    <div class="callout callout-warn">
+      <strong>YELLOW — Operational with known gaps.</strong>
+      Current phase: <strong>D — Repository Intelligence</strong>. The pipeline runs and produces real
+      signals; the emphasis is signal quality and intelligence depth, not collector volume.
+    </div>
+
+    <div class="callout callout-info">
+      <strong>A profile-driven platform, not a single-mission app (ADR-0020).</strong> Public Scientific
+      Lighthouse, Private Invention Discovery, Patent and Research Tracking, Scientific Preservation,
+      Repository Capability Discovery, Aerospace/Defense Monitoring, Fusion Research Monitoring and custom
+      operator profiles are <strong>first-class, co-equal missions</strong>. The shared platform stays
+      <strong>profile-neutral</strong> (observation, normalization, facts, provenance, temporal history,
+      candidate/hypothesis/finding mechanics, counterevidence, review history, backup, query surfaces);
+      <strong>profiles own the interpretation</strong> (source classes, collectors, detector rules,
+      evidence and counterevidence requirements, privacy, publishing, retention).
+    </div>
+
+    <div class="callout callout-info">
+      <strong>Next: runtime policy resolver, then lifecycle implementation.</strong> The fact layer and
+      candidate/review loop are complete (LHP-INTEL-03A–04C). The controlled profile-switch lifecycle
+      is designed (<a href="../adr/0024-controlled-profile-switch-lifecycle.md">ADR-0024</a>; LHP-LIFE-DESIGN-01
+      plus C2, C3, C4, and C5 docs-only design corrections done) but <strong>not implemented</strong>.
+      Controlled profile switching remains design-only. Next:
+      <strong>LHP-LIFE-RESOLVE-01</strong> (<code>CORE-RESOLVE-01</code>). Parallel gap analysis:
+      <strong>LHP-SCPRES-GAP-01</strong> (Scientific Preservation activation readiness).
+      <strong>LHP-LIFE-TRUTH-01</strong> (commit <code>8399764</code>) corrected stale CLI claims;
+      switching and deactivation remain unimplemented.
+      <strong>Facts first. Interpretation second. Findings only after evidence and review.</strong>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>v1.0.0 shipped scope — RCD operator foundation only.</strong>
+      Release v1.0.0 claims backup-gated initial activation of <code>repository_capability_discovery</code>
+      v2, the observe/detect/review loop, and OSR export — <strong>not</strong> full multi-profile
+      operation, profile switching, Gateway authority, or sovereign production completeness. Switch
+      lifecycle design: <a href="../adr/0024-controlled-profile-switch-lifecycle.md">ADR-0024</a> (not
+      implemented). See <a href="../V1_OPERATOR_WORKFLOW.md">V1_OPERATOR_WORKFLOW.md</a>.
+    </div>
+
+    <h2 id="full-capability">Full-capability path (planned)</h2>
+    <p class="page-intro"><strong>Planned work only.</strong> Shipped state remains in
+    <a href="../ROADMAP_STATUS.md">ROADMAP_STATUS.md</a>. The authoritative intended destination —
+    capability IDs, profile gates, and release trains from v1.0.0 through V2 — is
+    <a href="../FULL_CAPABILITY_ROADMAP.md">docs/FULL_CAPABILITY_ROADMAP.md</a>.</p>
+
+    <div class="callout callout-info">
+      <strong>Nine release trains (provisional labels, no dates).</strong>
+      Ordered dependency-aware sequence toward full-capability V2. None of the trains below are complete
+      unless <code>ROADMAP_STATUS.md</code> records the evidence.
+    </div>
+
+    <table>
+      <thead><tr><th>Train</th><th>Label</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>V1.0.x — Foundation hardening</td><td><span class="status-planned">Planned</span></td></tr>
+        <tr><td>2</td><td>Profile lifecycle foundation</td><td><span class="status-planned">Planned</span></td></tr>
+        <tr><td>3</td><td>Scientific Preservation complete vertical</td><td><span class="status-planned">Planned</span></td></tr>
+        <tr><td>4</td><td>Private Invention Discovery complete vertical</td><td><span class="status-planned">Planned</span></td></tr>
+        <tr><td>5</td><td>Patent/research + remaining bundled profiles</td><td><span class="status-planned">Planned</span></td></tr>
+        <tr><td>6</td><td>Gateway-governed outputs and external actions</td><td><span class="status-planned">Blocked (ADR-0010)</span></td></tr>
+        <tr><td>7</td><td>Scheduling, API, and operator interface</td><td><span class="status-planned">Planned</span></td></tr>
+        <tr><td>8</td><td>Sovereign production deployment</td><td><span class="status-planned">Planned</span></td></tr>
+        <tr><td>9</td><td>Full-capability V2 release</td><td><span class="status-planned">Planned</span></td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="phases">Architecture Phases (A–K) — shipped and historical direction</h2>
+    <table>
+      <thead><tr><th>Phase</th><th>Name</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>A</td><td>Foundation</td><td><span class="status-live">Complete</span></td></tr>
+        <tr><td>B</td><td>Graph Intelligence</td><td><span class="status-live">Complete</span></td></tr>
+        <tr><td>C</td><td>Temporal Intelligence</td><td><span class="status-live">Complete</span></td></tr>
+        <tr><td>D</td><td>Repository Intelligence</td><td><span class="status-degraded">In progress</span></td></tr>
+        <tr><td>E</td><td>Intelligence Profiles</td><td><span class="status-optional">Narrow backup-gated initial activation shipped — <code>no_active_profile → repository_capability_discovery</code> v2 only. Switch lifecycle designed (<a href="../adr/0024-controlled-profile-switch-lifecycle.md">ADR-0024</a>) but not implemented. The five bundled profile seeds remain declarative; none is production-ready. No switching, no Scientific Preservation activation, no Gateway authority, no production-host ceremony.</span></td></tr>
+        <tr><td>F</td><td>Backup &amp; Restore Verification</td><td><span class="status-optional">Partial (eligibility only)</span></td></tr>
+        <tr><td>G</td><td>Gateway Integration</td><td><span class="status-planned">Blocked (ADR-0010)</span></td></tr>
+        <tr><td>H</td><td>Execution Authority</td><td><span class="status-planned">Future</span></td></tr>
+        <tr><td>I</td><td>Scientific Preservation</td><td><span class="status-planned">Future (declarative)</span></td></tr>
+        <tr><td>J</td><td>Dead-Man's Switch</td><td><span class="status-planned">Blocked (ADR-0006)</span></td></tr>
+        <tr><td>K</td><td>Public Release</td><td><span class="status-planned">Future</span></td></tr>
+      </tbody>
+    </table>
+    <p>Each phase's purpose, remaining work, dependencies, blocking decisions, and success criteria are
+    detailed in <a href="../ROADMAP.md">docs/ROADMAP.md</a>. Decisions behind the blocked phases are in
+    the <a href="adr.html">Architecture Decisions</a>.</p>
+
+    <h2 id="completed">Completed Packets (18–28 + profile foundation)</h2>
+    <table>
+      <thead><tr><th>Packet</th><th>What was done</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>18</td>
+          <td>Graph backfill — <code>lighthouse graph-backfill</code> repopulates graph nodes/edges from historical correlation records. Idempotent upsert.</td>
+          <td><span class="badge badge-done">Done</span></td>
+        </tr>
+        <tr>
+          <td>19</td>
+          <td>Facility alias normalization — explicit aliases on FlightConfig.facilities for LLNL/NIF, Helion/Everett, DARPA HQ, RTP, Camp Lejeune. Alias-aware targeted mode matching.</td>
+          <td><span class="badge badge-done">Done</span></td>
+        </tr>
+        <tr>
+          <td>20</td>
+          <td>Callsign enrichment foundation — deterministic normalization, prefix classification, <code>CallsignEnrichment</code> metadata on ADSB/flight alerts via <code>modules/callsigns.py</code>.</td>
+          <td><span class="badge badge-done">Done</span></td>
+        </tr>
+        <tr>
+          <td>21</td>
+          <td>Callsign historical persistence — <code>callsign_observations</code> table; ADSB/flight persist observations; <code>lighthouse callsigns</code> CLI.</td>
+          <td><span class="badge badge-done">Done</span></td>
+        </tr>
+        <tr>
+          <td>22</td>
+          <td>Weighted correlation scoring — deterministic signal-aware weights (ADSB military + SEC materiality + multi-signal combos). No ML, no external lookups.</td>
+          <td><span class="badge badge-done">Done</span></td>
+        </tr>
+        <tr>
+          <td>23</td>
+          <td>Start9 operational hardening — <code>seed/targets.json</code> added; entrypoint seeds targets.json on first run; archive deny-page filter; dead manifest env var removed; OPERATIONS.md Start9 SOP expanded.</td>
+          <td><span class="badge badge-done">Done</span></td>
+        </tr>
+        <tr>
+          <td>24</td>
+          <td>Temporal intelligence foundation — <code>modules/temporal_analysis.py</code> with deterministic callsign recurrence metrics, recent-activity windows, facility aggregation; <code>lighthouse temporal</code> CLI (<code>--callsign</code>, <code>--facility</code>, <code>--recent</code>, <code>--json</code>); optional read-only temporal context injected into correlator evidence.</td>
+          <td><span class="badge badge-done">Done</span></td>
+        </tr>
+        <tr>
+          <td>25</td>
+          <td>Graph-native callsign entities — <code>callsign:</code>, <code>facility:</code>, and <code>prefix:</code> graph nodes emitted from correlation evidence; edges: <code>participated_in</code>, <code>observed_via</code>, <code>observed_near</code>, <code>has_prefix</code>; temporal metadata injected into callsign node properties; <code>lighthouse graph --entity PAT16</code> auto-resolves to <code>callsign:PAT16</code>.</td>
+          <td><span class="badge badge-done">Done</span></td>
+        </tr>
+        <tr>
+          <td>26</td>
+          <td>Mission recurrence and operational tempo — <code>modules/tempo_analysis.py</code> with interval stats, weekday/hour distributions, recurring facility detection, temporal cluster analysis; <code>lighthouse tempo</code> CLI (<code>--callsign</code>, <code>--facility</code>, <code>--recurring</code>, <code>--json</code>); optional tempo context in correlator evidence.</td>
+          <td><span class="badge badge-done">Done</span></td>
+        </tr>
+        <tr>
+          <td>27</td>
+          <td>Private local intelligence gateway — <code>modules/local_gateway.py</code> bounded read-only dispatch with 5 methods (<code>callsign.summary</code>, <code>facility.summary</code>, <code>correlations.recent</code>, <code>graph.summary</code>, <code>intelligence.daily_brief</code>); FastAPI <code>/local/*</code> routes enforced to 127.0.0.1/::1 only; evidence stripped from all responses.</td>
+          <td><span class="badge badge-done">Done</span></td>
+        </tr>
+        <tr>
+          <td>28</td>
+          <td>Static documentation site upgrade — <code>docs/site/</code> brought up to date (later expanded by the documentation-architecture reconciliation).</td>
+          <td><span class="badge badge-done">Done</span></td>
+        </tr>
+        <tr>
+          <td>LHP-PROFILE-01</td>
+          <td>Intelligence Profile foundation &amp; backup readiness — declarative <code>IntelligenceProfile</code> contract, read-only registry over six seed profiles (none production-ready), fail-closed <code>backup-readiness</code> inspector. That packet activated nothing; narrow RCD v2 initial activation shipped later via <code>lighthouse profile-activate</code>. See <a href="profiles.html">Intelligence Profiles</a>.</td>
+          <td><span class="badge badge-done">Done</span></td>
+        </tr>
+        <tr>
+          <td>LHP-INTEL-01A&ndash;04D-R1</td>
+          <td>Intelligence engine (fact-first) — local observation intake, cross-scope discovery, exact <code>content:&lt;sha256&gt;</code> identity, candidate/review loop, public-source check facts, Scientific Preservation detector (04C), OSR export (04D-R1). A candidate is not a finding; a <code>not_found</code> is HTTP 404/410, not disappearance (ADR-0020/0021/0022/0023).</td>
+          <td><span class="badge badge-done">Done</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 id="earlier">Earlier Completed Milestones</h2>
+    <ul>
+      <li>Signal → Alerts → Correlation → Graph → Query → MCP → Explanation pipeline</li>
+      <li><code>AlertRecord</code> / <code>CorrelationRecord</code> / <code>GraphNode</code> / <code>GraphEdge</code> contracts</li>
+      <li>Witness layer (SHA-256 hash for correlation events; BIP-340 signing helper demonstration/test-only)</li>
+      <li>Graph persistence wired into correlator (Packet 12)</li>
+      <li>SEC alert dedup by stable filing identity</li>
+      <li>Start9 persistent volume path fix (<code>LIGHTHOUSE_DATA_DIR=/data</code>)</li>
+      <li>Controlled high-signal Nostr publishing validated</li>
+      <li>DARPA / government_defense_labs target profile</li>
+      <li>Archive source discovery repair — RSS/Atom feed-first, HTML fallback (Packet 14)</li>
+      <li>arXiv operational researcher roster externalized to <code>seed/researchers.json</code> (Packet 16)</li>
+      <li>Patent provider graceful degradation — disabled by default, no DNS spam (Packet 17)</li>
+      <li>Static HTML explainer site added under <code>docs/site/</code></li>
+    </ul>
+
+    <h2 id="next">Backlog &amp; Next Work</h2>
+    <p>These are candidate items, not committed work — the full backlog lives in
+    <a href="../FUTURE_PLAN.md">docs/FUTURE_PLAN.md</a>.</p>
+
+    <h3>BitAgent Payment-Gated Queries</h3>
+    <p>After 2+ weeks of stable live data on Start9, a BitAgent payment wrapper could gate MCP
+    intelligence queries (graph lookups, correlation explanations) behind a micropayment, consuming the
+    bounded read-only <a href="local-gateway.html">Local Gateway</a>. Deferred, not scheduled.</p>
+
+    <h3>Signal Quality Tuning</h3>
+    <p>Calibrate scoring weights using live Start9 data before any new collector expansion — better
+    discrimination, fewer false positives.</p>
+
+    <h3>DoE Archive Feed &amp; USPTO ODP Patent Adapter</h3>
+    <p>Both are blocked on external dependencies: a stable DoE newsroom RSS endpoint, and a confirmed
+    USPTO Open Data Portal search endpoint/schema (to flip the patent provider default from
+    <code>disabled</code> to <code>odp</code>).</p>
+
+    <h2 id="nonstarter">Explicit Non-Goals (Near Term)</h2>
+    <ul>
+      <li>Broad collector sprawl — no new APIs without an interpretation plan</li>
+      <li>Random feature additions unrelated to graph/temporal/callsign leverage</li>
+      <li>Lowering Nostr or correlation gates to increase output volume</li>
+      <li>LLM in the deterministic core (narrative module is the isolated exception)</li>
+      <li>Public MCP exposure without authentication</li>
+    </ul>
+
+    <div class="callout callout-info">
+      <strong>The guiding principle</strong>
+      Improve the meaning and depth of existing signals before adding new sources. Lighthouse's strongest near-term leverage is interpretation, not volume.
+    </div>
+  </main>
+</div>
+<footer>
+  <span>Lighthouse — pattern-match-sentinel</span>
+  <a href="../ROADMAP.md">Roadmap</a>
+  <a href="../ROADMAP_STATUS.md">Status</a>
+  <a href="../adr/README.md">ADRs</a>
+  <a href="../ARCHITECTURE_INDEX.md">Architecture Index</a>
+</footer>
+<script src="site.js"></script>
+</body>
+</html>

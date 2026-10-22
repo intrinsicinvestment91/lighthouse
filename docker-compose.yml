@@ -1,0 +1,42 @@
+services:
+  lighthouse-mcp:
+    build: .
+    env_file: .env
+    environment:
+      LIGHTHOUSE_MCP_TRANSPORT: sse
+    command: ["lighthouse-mcp"]
+    ports:
+      - "8001:8001"
+    profiles:
+      - mcp
+    volumes:
+      - ./data:/app/data
+
+  lighthouse:
+    build: .
+    env_file: .env
+    environment:
+      # Override IPFS_API_URL to use the Docker service name
+      IPFS_API_URL: /dns4/ipfs/tcp/5001
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      ipfs:
+        condition: service_healthy
+
+  ipfs:
+    image: ipfs/kubo:latest
+    volumes:
+      - ipfs_data:/data/ipfs
+    ports:
+      - "8080:8080"   # IPFS gateway (read-only, safe to expose)
+      # API port 5001 is intentionally NOT published to the host —
+      # lighthouse connects via internal Docker network only.
+    healthcheck:
+      test: ["CMD", "ipfs", "version"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  ipfs_data:

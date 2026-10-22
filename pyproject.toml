@@ -1,0 +1,93 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pattern-match-sentinel"
+version = "1.0.1"
+description = "Automated OSINT archival system for aerospace and energy breakthroughs — patents, government newsrooms, and decentralized publishing via Nostr."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+authors = [{ name = "intrinsicinvestment91" }]
+keywords = ["osint", "patents", "nostr", "ipfs", "aerospace", "energy"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+]
+dependencies = [
+    "playwright>=1.44",
+    "httpx>=0.27",
+    "ipfshttpclient>=0.7.0",
+    "websockets>=12.0",
+    "cryptography>=42.0",
+    "coincurve>=21.0.0",
+    "tenacity>=8.2",
+    "anthropic>=0.30",
+    "pypdf>=5.0",
+]
+
+[project.optional-dependencies]
+portal = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "passlib[bcrypt]>=1.7",
+    "mcp[cli]>=1.0",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-httpx>=0.30",
+    "ruff>=0.4",
+    "pre-commit>=3.7",
+    "build>=1.2",
+]
+
+[project.scripts]
+lighthouse = "main:cli_main"
+lighthouse-mcp = "portal.mcp_server:cli_main"
+
+[project.urls]
+Homepage = "https://example.invalid/lighthouse"
+Repository = "https://example.invalid/lighthouse"
+Issues = "https://example.invalid/lighthouse/issues"
+
+[tool.setuptools]
+py-modules = ["main", "config"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["modules*", "portal*"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = [
+    "B008",   # do not perform function calls in argument defaults
+    "SIM108", # ternary operator -- sometimes less readable
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["modules", "config"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = ["-p", "tests.runtime_isolation", "-p", "no:cacheprovider"]
+markers = [
+    "integration: marks tests that require live network access and real API keys (deselect with '-m not integration')",
+]
+
+[tool.ruff.format]
+quote-style = "double"

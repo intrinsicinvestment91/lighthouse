@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "activation_intent.v1",
+  "title": "Lighthouse Activation Intent",
+  "description": "A deterministic, digest-bearing declaration: 'I intend to move from profile A to profile B' (LHP-PROFILE-14B, ADR-0016). The bridge object between the transition preview and a FUTURE activation capability — the natural payload for the activation endpoint's transition_reference input. It is NOT an approval, NOT an authorization, NOT execution: authorizes_activation is a digest-covered constant false and validation rejects anything else. It is an HONEST artifact: the embedded preconditions result records the true evaluation at build time, so blocked/invalid transitions are representable — recorded, never executable. References are bindings, never copies. IDEMPOTENCY SEMANTICS: two activation attempts are the same intended transition iff their artifact_digest values are equal (intent_id/created_at are handles, digest-EXCLUDED); duplicate prevention belongs to the future execution ledger, transition lock, and single-request endpoint semantics — none exist yet. This document is a human/Gateway-facing reference mirror; the AUTHORITATIVE enforcer is modules/activation_intent.py (ActivationIntent.validate(), which also RECOMPUTES artifact_digest).",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "intent_id",
+    "created_at",
+    "current_profile_id",
+    "current_profile_version",
+    "target_profile_id",
+    "target_profile_version",
+    "target_profile_sha256",
+    "preview_id",
+    "preview_digest",
+    "backup_manifest_id",
+    "backup_manifest_sha256",
+    "preconditions_decision",
+    "preconditions_reasons",
+    "authorizes_activation",
+    "artifact_digest"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1,
+      "description": "Contract version. Unknown/future versions fail closed."
+    },
+    "intent_id": {
+      "type": "string",
+      "description": "Unique handle (lhintent-<hex16>). Excluded from artifact_digest (volatile) — identity lives in the digest, not the id."
+    },
+    "created_at": {
+      "type": "string",
+      "description": "Timezone-aware ISO-8601 build timestamp. Excluded from artifact_digest (volatile). Never gate on it."
+    },
+    "current_profile_id": {
+      "type": ["string", "null"],
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Declared current state ('from profile A'), recorded from an explicit valid ActiveProfileState. Both current_* null = foundation activation (same semantics the shipped Gateway classifier reads from the preview); half declarations are rejected."
+    },
+    "current_profile_version": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "description": "Version of the declared current profile; null iff current_profile_id is null."
+    },
+    "target_profile_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "'To profile B' — always required; an intent without a target is invalid. Consumers: future activation packet; execution plan request_profile_activation inputs."
+    },
+    "target_profile_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Target profile version — always required."
+    },
+    "target_profile_sha256": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Content binding of the target profile (recompute vs the live registry at ceremony). Required when preconditions_decision is 'ready'."
+    },
+    "preview_id": {
+      "type": ["string", "null"],
+      "description": "Id of the reviewed transition preview. Required when ready."
+    },
+    "preview_digest": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "The preview's artifact_digest — binds the preview and, transitively, every digest-covered producer fact inside it (the packet's 'producer fact references', by reference not copies). Same binding names as the shipped Gateway approval contract. Required when ready."
+    },
+    "backup_manifest_id": {
+      "type": ["string", "null"],
+      "description": "Backup evidence reference by id. Required when ready."
+    },
+    "backup_manifest_sha256": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Backup evidence reference by CONTENT (sha256 of the manifest file bytes, per LHP-PROFILE-14A). Required when ready."
+    },
+    "preconditions_decision": {
+      "type": "string",
+      "enum": ["ready", "blocked", "invalid"],
+      "description": "The activation-preconditions evaluator's decision at build time (the packet's 'validation result'). 'ready' is a statement about preconditions, never an authorization. Unknown never becomes ready; consumers must re-evaluate, never trust this alone."
+    },
+    "preconditions_reasons": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Stable snake-case reason tokens, deterministic order. Must be empty iff decision is 'ready'; a non-ready intent must state at least one reason (fail-closed honesty)."
+    },
+    "authorizes_activation": {
+      "type": "boolean",
+      "const": false,
+      "description": "The anti-confusion pin: an intent NEVER authorizes anything (no path where 'approved' = 'activated'). Identity-checked at runtime — true, 1, and string stand-ins are all rejected. Digest-covered."
+    },
+    "artifact_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 over the canonical intent content (sort_keys, compact separators). Excludes exactly: intent_id, created_at, and itself. This digest IS the producer-side idempotency identity. validate() recomputes and compares."
+    }
+  }
+}

@@ -1,0 +1,14 @@
+.git
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+data/
+logs/
+backups/
+*.log
+.env
+.env.*
+*.s9pk
+image.tar
+ops/

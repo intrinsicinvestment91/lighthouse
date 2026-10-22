@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture Decisions | Lighthouse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="site-title" href="index.html"><span class="beacon"></span> Lighthouse</a>
+  <span class="header-status">YELLOW — Operational</span>
+</header>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Start Here</span>
+      <a href="index.html">Home</a>
+      <a href="overview.html">What is Lighthouse?</a>
+      <a href="capabilities.html">Capabilities</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Using It</span>
+      <a href="day-to-day.html">Day-to-Day Usage</a>
+      <a href="operator.html">Operator Guide</a>
+      <a href="targets.html">Target Profiles</a>
+      <a href="start9.html">Start9 Deployment</a>
+      <a href="local-gateway.html">Local Gateway</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Understanding It</span>
+      <a href="signals.html">Signal Sources</a>
+      <a href="graph.html">Graph Intelligence</a>
+      <a href="profiles.html">Intelligence Profiles</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="gateway-boundary.html">Gateway Boundary</a>
+      <a href="source-packs.html">Repository Source Packs</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Security & Decisions</span>
+      <a href="security.html">Security</a>
+      <a href="adr.html" class="active">Architecture Decisions</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">For Developers</span>
+      <a href="developer.html">Developer Guide</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+  </nav>
+  <main>
+    <h1>Architecture Decision Records</h1>
+    <p class="page-intro">The log of significant architectural decisions and why they were made.
+    Canonical source: <a href="../adr/README.md"><code>docs/adr/</code></a>. Each record carries ID,
+    Status, Date, Context, Decision, Consequences, repository evidence, related packets, and
+    superseded-by.</p>
+
+    <div class="callout callout-info">
+      ADRs are immutable once accepted. A decision is reversed by adding a new ADR and marking the old
+      one superseded — never by editing it.
+    </div>
+
+    <h2>Index</h2>
+    <table>
+      <thead><tr><th>ADR</th><th>Decision</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><a href="../adr/0001-lighthouse-owns-engine-gateway-is-control-plane.md">0001</a></td><td>Lighthouse owns the engine; Gateway is the thin control plane</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0002-intelligence-profiles-are-declarative-not-plugins.md">0002</a></td><td>Intelligence Profiles are declarative policy bundles, not plugins</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0003-exactly-one-active-profile-controlled-switch.md">0003</a></td><td>Exactly one active profile; switching is a controlled, backup-gated transition</td><td><span class="status-planned">Accepted — implementation deferred; superseded in part by 0024</span></td></tr>
+        <tr><td><a href="../adr/0004-backup-readiness-fail-closed-data-boundary.md">0004</a></td><td>Backup readiness is fail-closed within a canonical <code>/data</code> boundary</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0005-invention-engine-belongs-in-lighthouse-migration-deferred.md">0005</a></td><td>The invention engine belongs in Lighthouse; migration deferred</td><td><span class="status-planned">Accepted — deferred</span></td></tr>
+        <tr><td><a href="../adr/0006-dms-production-blocked-pending-threat-model.md">0006</a></td><td>DMS production use is blocked pending a threat model</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0007-authority-gates-fail-closed-local-gate-defense-in-depth.md">0007</a></td><td>Authority gates fail closed; local MCP gate is defense-in-depth</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0008-repository-source-packs-are-a-deterministic-observation-source.md">0008</a></td><td>Repository Source Packs are an observation source, not a second engine</td><td><span class="status-planned">Accepted — deferred</span></td></tr>
+        <tr><td><a href="../adr/0009-no-llm-in-deterministic-core.md">0009</a></td><td>No LLM in the deterministic core pipeline</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0010-live-gateway-bridge-blocked-pending-package-exposure.md">0010</a></td><td>The live Gateway bridge is blocked pending package-side REST exposure</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0011-documentation-architecture-one-source-per-topic.md">0011</a></td><td>Role-separated documentation with one canonical source per topic</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0012-naming-lighthouse-product-repo-identifier.md">0012</a></td><td>Naming: product is Lighthouse; <code>pattern-match-sentinel</code> is the repository identifier</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0013-verified-backup-and-restore-drill-before-profile-activation.md">0013</a></td><td>Verified backup manifest + isolated restore drill required before profile activation</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0014-transition-preview-artifacts-before-profile-activation.md">0014</a></td><td>Transition preview artifacts required before profile activation</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0015-preview-carries-producer-owned-execution-facts.md">0015</a></td><td>Transition preview carries producer-owned execution facts (additive, serialization v2)</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0016-activation-capability-boundary.md">0016</a></td><td>Activation capability boundary: contracts before capability — no activation</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0017-lighthouse-describes-activation-capability.md">0017</a></td><td>Lighthouse describes its activation capability; the Gateway defines and trusts it (declared <code>not_implemented</code>)</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0018-governance-frozen-pending-runtime-intelligence.md">0018</a></td><td>Profile governance is frozen at LHP-PROFILE-14C; the intelligence engine comes first</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0019-local-operator-sources-are-gateway-independent.md">0019</a></td><td>Local operator sources are a distinct, Gateway-independent observation class</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0020-profile-neutral-substrate-profile-owned-detectors.md">0020</a></td><td>A profile-neutral intelligence substrate with profile-owned detectors; facts before significance</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0021-pattern-candidates-are-review-objects-not-findings.md">0021</a></td><td>Pattern candidates are profile-owned review objects, not findings; no score, no promotion, no activation</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0022-public-source-retrieval-is-isolated-to-a-hardened-fact-adapter.md">0022</a></td><td>Public source retrieval is isolated to a hardened fact adapter; append-only checks, not_found is not disappearance, no body storage, no candidate</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0023-detector-owned-candidate-specifications.md">0023</a></td><td>Detector-owned candidate specifications preserve a profile-neutral PatternCandidate; second profile (Scientific Preservation) carried with repository candidates byte-identical, no v2</td><td><span class="status-live">Accepted</span></td></tr>
+        <tr><td><a href="../adr/0024-controlled-profile-switch-lifecycle.md">0024</a></td><td>Controlled profile-switch lifecycle: active-to-active cutover, durable attempt journal, admission fence, migration and rollback limits (design only)</td><td><span class="status-planned">Accepted — implementation deferred</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-info">
+      <strong>ADR-0020 — the significance boundary.</strong> Facts first, interpretation second, findings
+      only after evidence and review. A repeated fact is not automatically significant; a candidate is not
+      a hypothesis; a hypothesis is not a finding; <strong>a finding is not permission to publish or
+      execute</strong>. Detector rules are <strong>profile-owned</strong>; the substrate stays
+      profile-neutral. The first candidate/review loop has now shipped (<strong>ADR-0021</strong>) and it
+      still says nothing about significance: <strong>no hypothesis layer and no finding layer exist</strong>,
+      and a candidate carries no score, no rank and no aggregate confidence. Two earlier ADRs carry
+      corrective notes rather than rewrites: ADR-0005's premise that the invention engine lived in the
+      Gateway was wrong (it was in no repository at all), and ADR-0008's alert/correlation/graph pipeline
+      for source packs is <strong>superseded in part</strong> by the fact-first pipeline.
+    </div>
+
+    <p class="text-muted">Several ADRs are "Accepted — implementation deferred": the decision is
+    settled, the code is future work. See each record for its exact status and evidence.</p>
+  </main>
+</div>
+<footer>
+  <span>Lighthouse — pattern-match-sentinel</span>
+  <a href="../adr/README.md">ADR index</a>
+  <a href="../ARCHITECTURE_INDEX.md">Architecture Index</a>
+  <span class="text-muted" style="margin-left:auto;">Static explainer — canonical source: Markdown docs</span>
+</footer>
+<script src="site.js"></script>
+</body>
+</html>

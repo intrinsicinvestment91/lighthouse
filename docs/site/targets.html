@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Target Profiles | Lighthouse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="site-title" href="index.html"><span class="beacon"></span> Lighthouse</a>
+  <span class="header-status">YELLOW — Operational</span>
+</header>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Start Here</span>
+      <a href="index.html">Home</a>
+      <a href="overview.html">What is Lighthouse?</a>
+      <a href="capabilities.html">Capabilities</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Using It</span>
+      <a href="day-to-day.html">Day-to-Day Usage</a>
+      <a href="operator.html">Operator Guide</a>
+      <a href="targets.html" class="active">Target Profiles</a>
+      <a href="start9.html">Start9 Deployment</a>
+      <a href="local-gateway.html">Local Gateway</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Understanding It</span>
+      <a href="signals.html">Signal Sources</a>
+      <a href="graph.html">Graph Intelligence</a>
+      <a href="profiles.html">Intelligence Profiles</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="gateway-boundary.html">Gateway Boundary</a>
+      <a href="source-packs.html">Repository Source Packs</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Security & Decisions</span>
+      <a href="security.html">Security</a>
+      <a href="adr.html">Architecture Decisions</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">For Developers</span>
+      <a href="developer.html">Developer Guide</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+  </nav>
+  <main>
+    <h1>Target Profiles</h1>
+    <p class="page-intro">How Lighthouse decides what to watch — target profiles and signal routing.</p>
+
+    <h2 id="what">What Target Profiles Are</h2>
+    <p>A target profile tells Lighthouse: "watch these entities, looking for these kinds of signals, in these regions." Profiles are stored in JSON and can be customized per deployment without changing any code.</p>
+    <p>Each profile specifies:</p>
+    <ul>
+      <li><strong>name</strong> — a unique identifier for the profile</li>
+      <li><strong>entities</strong> — organization names to watch (Lockheed Martin, MIT Lincoln Laboratory, etc.)</li>
+      <li><strong>keywords</strong> — terms that indicate relevance (hypersonic, fusion, directed energy, etc.)</li>
+      <li><strong>signals</strong> — which collectors to activate (<code>sec</code>, <code>adsb</code>, <code>flight</code>, <code>arxiv</code>, <code>patent</code>, <code>archive</code>, <code>narrative</code>)</li>
+      <li><strong>regions</strong> — geographic scope (e.g. <code>nc</code> for North Carolina, <code>ca</code> for California)</li>
+      <li><strong>priority</strong> — <code>high</code>, <code>medium</code>, or <code>low</code></li>
+      <li><strong>enabled</strong> — whether the profile is active</li>
+    </ul>
+
+    <h2 id="files">Where They Live</h2>
+    <table>
+      <thead><tr><th>File</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>data/targets.json</code></td><td>Runtime copy — loaded by Lighthouse on each run. Operator-customizable after deployment.</td></tr>
+        <tr><td><code>seed/targets.json</code></td><td>Default profiles seeded from the Docker image on first Start9 run. Not overwritten on updates.</td></tr>
+      </tbody>
+    </table>
+    <p>Edit <code>data/targets.json</code> to customize your watch plan without changing the image defaults. On Start9, this file lives in the persistent <code>/data/</code> volume.</p>
+
+    <h2 id="current">Current Active Profiles</h2>
+
+    <h3>fusion_research</h3>
+    <p>Tracks public and private fusion energy research organizations. Watches for SEC filings, patent activity, arXiv research publications, and archive/narrative signals related to fusion plasma, inertial confinement, and energy technology.</p>
+
+    <h3>aerospace_defense</h3>
+    <p>Tracks major aerospace and defense contractors. Watches SEC filings, ADSB/flight activity near facilities, and archive signals. Entity list includes Lockheed Martin, Boeing, Raytheon, General Atomics, and similar.</p>
+
+    <h3>advanced_research_institutions</h3>
+    <p>Tracks research universities and national laboratories involved in advanced technology programs. Covers entities like MIT Lincoln Laboratory, Stanford, Caltech. Primarily watches arXiv silence, archive/narrative signals, and patent velocity.</p>
+
+    <h3>government_defense_labs</h3>
+    <p>The strongest live signal profile. Tracks DARPA, AFRL, NRL, NNSA, and related government defense research programs. Watches ADSB, flight, archive, and narrative signals. This profile drives most of the military aviation observations in production runs.</p>
+    <div class="callout callout-info">
+      <strong>Why DARPA is in targets but not entities.json</strong>
+      Government agencies that do not file SEC reports use a different entity schema. DARPA appears in the <code>government_defense_labs</code> target profile but is intentionally excluded from <code>entities.json</code> (which is used for SEC CIK resolution) until a government/non-SEC entity schema exists.
+    </div>
+
+    <h2 id="targeted-mode">How Targeted Mode Works</h2>
+    <p>Running <code>lighthouse --module targeted</code> reads <code>data/targets.json</code>, builds a route plan via <code>modules/signal_router.py</code>, and passes scoped parameters into each collector:</p>
+    <ul>
+      <li>SEC sentinel receives only the entities from active SEC-enabled profiles</li>
+      <li>ADSB/flight collectors receive the facility list scoped to active regions</li>
+      <li>arXiv sentinel receives only the researcher queries relevant to active keywords/entities</li>
+      <li>Archive and narrative collectors receive only the keyword-filtered targets</li>
+    </ul>
+    <p>This reduces noise compared to running all modules with broad defaults.</p>
+
+    <h2 id="routes">Inspecting Your Route Plan</h2>
+    <pre>lighthouse targets
+lighthouse targets --show-routes
+lighthouse targets --json</pre>
+    <p><code>--show-routes</code> shows the resolved routing plan: which signal type is active, which entities/keywords/regions are in scope, and which profiles contribute to each route. This is read-only and has no side effects.</p>
+
+    <h2 id="aliases">Facility Aliases</h2>
+    <p>Facilities in the flight/ADSB configuration often have multiple real-world names. Targeted-mode facility matching uses an <code>aliases</code> list on each facility definition in <code>config.py</code>, so a target referencing "LLNL" will also match aircraft observed near "Lawrence Livermore National Laboratory" or "NIF."</p>
+    <p>Implemented aliases include:</p>
+    <ul>
+      <li>LLNL ↔ Lawrence Livermore ↔ NIF (National Ignition Facility)</li>
+      <li>Helion Energy ↔ Everett (Helion's facility)</li>
+      <li>DARPA HQ ↔ DARPA (Arlington, VA)</li>
+      <li>Research Triangle Park ↔ RTP (NC)</li>
+      <li>Camp Lejeune ↔ government defense lab variants</li>
+    </ul>
+
+    <h2 id="schema">Profile Schema</h2>
+    <pre>{
+  "schema_version": 1,
+  "targets": [
+    {
+      "name": "example_target",
+      "entities": ["Acme Corp"],
+      "keywords": ["hypersonic", "propulsion"],
+      "signals": ["sec", "patent", "adsb"],
+      "regions": ["nc"],
+      "priority": "high",
+      "enabled": true
+    }
+  ]
+}</pre>
+    <p>Allowed signals: <code>sec</code>, <code>patent</code>, <code>arxiv</code>, <code>flight</code>, <code>adsb</code>, <code>narrative</code>, <code>archive</code>.</p>
+    <p>Allowed priorities: <code>high</code>, <code>medium</code>, <code>low</code>.</p>
+    <p>Each target must include at least one entity, keyword, or region.</p>
+
+    <div class="callout callout-warn">
+      <strong>Edit with care</strong>
+      Changes to <code>data/targets.json</code> affect which signals run and what gets correlated. Treat edits with the same care as changes to the entity seed. Validate with <code>lighthouse targets</code> before running the pipeline.
+    </div>
+  </main>
+</div>
+<footer>
+  <span>Lighthouse — pattern-match-sentinel</span>
+  <a href="../FUTURE_PLAN.md">Future Plan</a>
+  <a href="../ROADMAP_STATUS.md">Roadmap Status</a>
+  <a href="../OPERATIONS.md">Operations SOP</a>
+</footer>
+<script src="site.js"></script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security | Lighthouse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="site-title" href="index.html"><span class="beacon"></span> Lighthouse</a>
+  <span class="header-status">YELLOW — Operational</span>
+</header>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <span class="sidebar-label">Start Here</span>
+      <a href="index.html">Home</a>
+      <a href="overview.html">What is Lighthouse?</a>
+      <a href="capabilities.html">Capabilities</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Using It</span>
+      <a href="day-to-day.html">Day-to-Day Usage</a>
+      <a href="operator.html">Operator Guide</a>
+      <a href="targets.html">Target Profiles</a>
+      <a href="start9.html">Start9 Deployment</a>
+      <a href="local-gateway.html">Local Gateway</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Understanding It</span>
+      <a href="signals.html">Signal Sources</a>
+      <a href="graph.html">Graph Intelligence</a>
+      <a href="profiles.html">Intelligence Profiles</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="gateway-boundary.html">Gateway Boundary</a>
+      <a href="source-packs.html">Repository Source Packs</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">Security & Decisions</span>
+      <a href="security.html" class="active">Security</a>
+      <a href="adr.html">Architecture Decisions</a>
+    </div>
+    <div class="sidebar-section">
+      <span class="sidebar-label">For Developers</span>
+      <a href="developer.html">Developer Guide</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </div>
+  </nav>
+  <main>
+    <h1>Security Posture</h1>
+    <p class="page-intro">How Lighthouse stays safe: fail-closed controls, a private surface, gated
+    publishing, and honestly-recorded blocking items. Canonical source:
+    <a href="../SECURITY.md"><code>docs/SECURITY.md</code></a> (<code>LHP-SECURITY-01</code>), with the
+    detailed register in <a href="../PROFILE_SECURITY_RISKS.md"><code>PROFILE_SECURITY_RISKS.md</code></a>.</p>
+
+    <div class="callout callout-info">
+      <strong>LHP-SECURITY-01</strong> is a consolidated posture, not a claim of full hardening. Several
+      items below are <em>blocking</em> for future work and are recorded as such.
+    </div>
+
+    <h2>Design tenets</h2>
+    <ul>
+      <li><strong>Fail closed.</strong> Missing or unverifiable safety configuration must deny, never allow.</li>
+      <li><strong>Deterministic core.</strong> No LLM in correlation/scoring/witness/explanation — output is reproducible and attestable.</li>
+      <li><strong>Least exposure.</strong> MCP stays private; <code>/local/*</code> is loopback-only; only high-signal, evidence-stripped correlations may publish.</li>
+      <li><strong>Preserve intelligence.</strong> Authoritative state stays inside the <code>/data</code> backup boundary.</li>
+    </ul>
+
+    <h2>Threat-model status</h2>
+    <table>
+      <thead><tr><th>Area</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Deterministic core / no-LLM</td><td><span class="status-live">Enforced</span></td></tr>
+        <tr><td>Backup boundary (<code>/data</code>)</td><td><span class="status-live">Enforced (fail-closed)</span></td></tr>
+        <tr><td>MCP privacy / loopback <code>/local/*</code></td><td><span class="status-live">Enforced</span></td></tr>
+        <tr><td>Publishing gate (score ≥ 7.0, ≥2 signals)</td><td><span class="status-live">Enforced</span></td></tr>
+        <tr><td>Authority gate fail-closed (Lighthouse)</td><td><span class="status-live">Enforced — denies on missing/empty secret, invalid token, or any exception</span></td></tr>
+        <tr><td>Fact substrate cannot score</td><td><span class="status-live">Enforced — no score/weight/priority/importance/severity/rank column in any fact table (ADR-0020)</span></td></tr>
+        <tr><td>Significance layer</td><td><span class="status-planned">Not built — boundary decided (ADR-0020); a finding authorizes nothing</span></td></tr>
+        <tr><td>Public-source retrieval</td><td><span class="status-live">One hardened chokepoint (ADR-0022); network forbidden elsewhere (AST-pinned). Empty-default host allowlist, SSRF + DNS-rebinding defended, HTTPS-only, no response body stored, no candidate</span></td></tr>
+        <tr><td>DMS release safety</td><td><span class="status-planned">Blocked — no production behavior until threat model</span></td></tr>
+        <tr><td>Full platform threat model</td><td><span class="status-planned">Pending (prerequisite for public release)</span></td></tr>
+      </tbody>
+    </table>
+
+    <h2>Recorded risks (register)</h2>
+    <div class="callout callout-danger">
+      <strong>Dead-Man's Switch (highest).</strong> The DMS path could broadcast ciphertext with no
+      score/approval/witness gate. <strong>Production use is blocked</strong> pending a threat model and
+      release state machine. Profiles may declare DMS <em>eligibility</em> only. See ADR-0006.
+    </div>
+    <div class="callout callout-info">
+      <strong>Approval gate — Lighthouse side fixed.</strong> The Lighthouse MCP
+      <code>LIGHTHOUSE_APPROVAL_SECRET</code> gate is now <strong>fail-closed</strong>: it denies when the
+      secret is missing, empty or whitespace-only, when the token is absent or invalid, when the
+      configuration is unreadable, and on any exception. Uncertainty denies. The <em>Gateway-side</em>
+      approval check is a cross-repository dependency and is not re-verified here. Lighthouse retains its
+      independent local gate as defense-in-depth regardless. See ADR-0007.
+    </div>
+    <div class="callout callout-info">
+      <strong>A finding is not permission.</strong> Lighthouse answers <em>"what intelligence can be
+      extracted from the admitted evidence?"</em>; the Gateway answers <em>"may a consequential action or
+      external release occur?"</em>. Reaching the top of the evidence chain authorizes nothing, and
+      <strong>no score at any layer</strong> may promote a candidate, authorize publication, authorize
+      execution, override missing evidence, or suppress counterevidence. See ADR-0020.
+    </div>
+    <div class="callout callout-warn">
+      <strong><code>DB_PATH</code> backup escape.</strong> An authoritative path outside <code>/data</code>
+      escapes StartOS backup. <code>inspect_backup_readiness()</code> fails closed on escape. See ADR-0004.
+    </div>
+
+    <h2>Cross-repository dependency</h2>
+    <p>Lighthouse's posture depends on the separate Gateway application for
+    approval/policy/audit. The Gateway's fail-open defect is a cross-application blocker for any live
+    profile switch or source-pack bridge; the live bridge itself is blocked until package-side exposure
+    is approved (ADR-0010). See the
+    <a href="gateway-boundary.html">Gateway Boundary</a> page and the
+    <a href="adr.html">Architecture Decisions</a>.</p>
+  </main>
+</div>
+<footer>
+  <span>Lighthouse — pattern-match-sentinel</span>
+  <a href="../SECURITY.md">Security (LHP-SECURITY-01)</a>
+  <a href="../PROFILE_SECURITY_RISKS.md">Risk register</a>
+  <a href="../adr/README.md">ADRs</a>
+  <span class="text-muted" style="margin-left:auto;">Static explainer — canonical source: Markdown docs</span>
+</footer>
+<script src="site.js"></script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+#!/usr/bin/env python3
+"""Synthetic lighthouse CLI stub for rehearsal cleanup tests. Stdlib only."""
+
+from __future__ import annotations
+
+import json
+import os
+import sys
+import time
+from pathlib import Path
+
+
+def _flag_value(argv: list[str], name: str) -> str | None:
+    for i, arg in enumerate(argv):
+        if arg == name and i + 1 < len(argv):
+            return argv[i + 1]
+    return None
+
+
+def _emit(payload: dict) -> None:
+    sys.stdout.write(json.dumps(payload) + "\n")
+
+
+def _subcommand(argv: list[str]) -> str:
+    if len(argv) < 2:
+        return ""
+    first = argv[1]
+    if first == "observations" and len(argv) > 2 and argv[2] == "list":
+        return "observations list"
+    if first == "patterns" and len(argv) > 2 and argv[2] in {
+        "detect",
+        "list",
+        "show",
+        "review",
+    }:
+        return f"patterns {argv[2]}"
+    return first
+
+
+def main(argv: list[str]) -> int:
+    cmd = _subcommand(argv)
+    if not cmd:
+        return 2
+
+    called_file = os.environ.get("STUB_CALLED_FILE", "")
+    if called_file:
+        with open(called_file, "a", encoding="utf-8") as fh:
+            fh.write(cmd + "\n")
+
+    if os.environ.get("STUB_FAIL_AT", "") == cmd:
+        return 1
+
+    if os.environ.get("STUB_SLEEP_AT", "") == cmd:
+        ready = os.environ.get("STUB_READY_FILE", "")
+        if ready:
+            Path(ready).write_text(cmd, encoding="utf-8")
+        time.sleep(30)
+
+    if cmd == "backup-create":
+        dest = _flag_value(argv, "--destination")
+        if dest is None:
+            return 2
+        destination = Path(dest)
+        destination.mkdir(parents=True, exist_ok=True)
+        (destination / "manifest.json").write_text("", encoding="utf-8")
+        _emit({"status": "created"})
+        return 0
+
+    if cmd == "backup-verify":
+        _emit({"status": "verified"})
+        return 0
+
+    if cmd == "restore-drill":
+        payload = {"status": "completed"}
+        output = _flag_value(argv, "--output")
+        if output is not None:
+            Path(output).write_text(json.dumps(payload) + "\n", encoding="utf-8")
+        _emit(payload)
+        return 0
+
+    if cmd == "profile-transition-preview":
+        payload = {"transition_status": "ready_for_review"}
+        output = _flag_value(argv, "--output")
+        if output is not None:
+            Path(output).write_text(json.dumps(payload) + "\n", encoding="utf-8")
+        _emit(payload)
+        return 0
+
+    if cmd == "profile-activate":
+        _emit({"status": "activated"})
+        return 0
+
+    if cmd == "observe":
+        _emit({"failed": 0, "stored": 2})
+        return 0
+
+    if cmd == "observations list":
+        _emit({"count": 2})
+        return 0
+
+    if cmd == "patterns detect":
+        data_dir = os.environ.get("LIGHTHOUSE_DATA_DIR")
+        if not data_dir:
+            return 2
+        marker = Path(data_dir) / ".stub_patterns_detect_called"
+        if marker.exists():
+            _emit({"stored": 0, "already_present": 1})
+        else:
+            marker.write_text("1\n", encoding="utf-8")
+            _emit({"stored": 1, "already_present": 0})
+        return 0
+
+    if cmd == "patterns list":
+        _emit({"count": 1, "candidates": [{"candidate_id": "pc_stub1"}]})
+        return 0
+
+    if cmd == "patterns show":
+        _emit({"candidate": {"is_finding": False}})
+        return 0
+
+    if cmd == "patterns review":
+        _emit({"disposition": {"decision": "needs_more_evidence"}})
+        return 0
+
+    return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv))

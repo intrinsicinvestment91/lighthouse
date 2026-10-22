@@ -1,0 +1,684 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pattern_candidate.v1",
+  "title": "Lighthouse Pattern Candidate",
+  "description": "A versioned, immutable review object created because direct stored facts satisfy one declared deterministic detector rule (LHP-INTEL-03B, ADR-0021). A candidate is NOT a hypothesis, NOT a finding, and NOT authority to do anything: it says 'these direct facts satisfy one declared review rule; an operator should look'. Candidate MECHANICS are profile-neutral; the detector RULE is profile-owned. The candidate carries no score, no rank, no aggregate confidence and no evaluative field of any kind \u2014 the field set is closed, so such a field is unrepresentable rather than merely absent. candidate_id is the artifact_digest with a 'pc_' prefix, so identical evidence reproduces an identical candidate (idempotent storage) and any change of evidence produces a NEW version sharing the candidate_key. This document is a human-facing reference mirror; the AUTHORITATIVE enforcer is modules/pattern_candidate.py (PatternCandidate.validate(), which RECOMPUTES artifact_digest AND candidate_key, and enforces every closed vocabulary below). Since LHP-INTEL-04C this is a discriminated union keyed on detector_id: the repository branch carries supporting_occurrences + distinct_repository_scope_count; the scientific-preservation branch carries evidence. The common spine (identity, digest, authority pins) is shared.",
+  "type": "object",
+  "required": [
+    "activates_profile",
+    "artifact_digest",
+    "authorizes_action",
+    "authorizes_execution",
+    "authorizes_release",
+    "candidate_id",
+    "candidate_key",
+    "candidate_state",
+    "candidate_type",
+    "contacts_gateway",
+    "counterevidence",
+    "created_at",
+    "detector_id",
+    "detector_version",
+    "deterministic_serialization_version",
+    "digest_algorithm",
+    "generator_version",
+    "is_finding",
+    "is_hypothesis",
+    "is_published",
+    "is_verified",
+    "limitations",
+    "operator_review_required",
+    "profile_id",
+    "rule_id",
+    "rule_parameters",
+    "rule_satisfied",
+    "rule_version",
+    "schema_version",
+    "subject",
+    "unknowns",
+    "uses_llm"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Unknown and future versions fail closed."
+    },
+    "candidate_id": {
+      "type": "string",
+      "pattern": "^pc_[0-9a-f]{64}$",
+      "description": "The artifact digest, typed. Derived, never supplied \u2014 validation recomputes it."
+    },
+    "candidate_key": {
+      "type": "string",
+      "pattern": "^pk_[0-9a-f]{64}$",
+      "description": "sha256 over {profile_id, detector_id, candidate_type, subject_entity_id}. Groups successive evidence versions of one logical candidate. Carries no timestamp."
+    },
+    "created_at": {
+      "type": "string",
+      "description": "UTC ISO-8601. DIGEST-EXCLUDED: two runs over the same facts must produce the same candidate."
+    },
+    "generator_version": {
+      "type": "string",
+      "const": "pattern_candidate/1"
+    },
+    "deterministic_serialization_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "artifact_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 over canonical JSON of every field EXCEPT candidate_id, created_at and artifact_digest itself. Evidence, unknowns, limitations, rule parameters and every authority pin are all covered."
+    },
+    "digest_algorithm": {
+      "type": "string",
+      "const": "sha256"
+    },
+    "profile_id": {
+      "type": "string",
+      "enum": [
+        "aerospace_defense_monitoring",
+        "fusion_research_monitoring",
+        "public_scientific_lighthouse",
+        "repository_capability_discovery",
+        "scientific_preservation"
+      ],
+      "description": "The profile that DECLARED the rule. Ownership, never activation: profile activation remains frozen (ADR-0018), and activates_profile is pinned false."
+    },
+    "detector_id": {
+      "type": "string",
+      "enum": [
+        "repository_exact_content_recurrence",
+        "scientific_source_disappearance_review"
+      ]
+    },
+    "detector_version": {
+      "type": "string"
+    },
+    "candidate_type": {
+      "type": "string",
+      "enum": [
+        "disappearing_scientific_source",
+        "repository_exact_content_recurrence"
+      ]
+    },
+    "candidate_state": {
+      "type": "string",
+      "enum": [
+        "ready_for_review"
+      ],
+      "description": "The ONLY state. There is no word here for verified, approved, finding, published, executing or completed \u2014 a promotion is unrepresentable."
+    },
+    "subject": {
+      "type": "object",
+      "required": [
+        "entity_id",
+        "entity_type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "type": "string",
+          "pattern": "^content:[0-9a-f]{64}$",
+          "description": "content:<sha256 of the exact raw bytes> (LHP-INTEL-03A)."
+        },
+        "entity_type": {
+          "type": "string",
+          "const": "content"
+        }
+      }
+    },
+    "supporting_occurrences": {
+      "type": "array",
+      "minItems": 2,
+      "description": "The complete validated occurrences the RULE used, verbatim from the read boundary, plus each artifact's coverage state. Ordered by (scope_id, source_artifact_digest, derivation_version) \u2014 the store's unique index, therefore a total order. Never ordered by count.",
+      "items": {
+        "type": "object",
+        "required": [
+          "scope_id",
+          "scope_type",
+          "scope_label",
+          "scope_path",
+          "value",
+          "entity_digest",
+          "source_artifact_digest",
+          "derivation_version",
+          "observed_at",
+          "sensors",
+          "supporting_observations",
+          "relationships",
+          "coverage_state"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "scope_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "scope_type": {
+            "type": "string",
+            "enum": [
+              "repository",
+              "document"
+            ]
+          },
+          "scope_label": {
+            "type": "string"
+          },
+          "scope_path": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "entity_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "source_artifact_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "derivation_version": {
+            "type": "string"
+          },
+          "observed_at": {
+            "type": "string"
+          },
+          "sensors": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "supporting_observations": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "observation_type",
+                "sensor",
+                "confidence",
+                "observed_at"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "observation_type": {
+                  "type": "string"
+                },
+                "sensor": {
+                  "type": "string"
+                },
+                "confidence": {
+                  "type": "number",
+                  "description": "EPISTEMIC, not evaluative: 1.0 = this fact was determined, 0.0 = it was not. It is not a measure of how much the fact matters, and it is never aggregated to candidate level."
+                },
+                "observed_at": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "relationships": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "relationship_type",
+                "subject_id",
+                "object_id",
+                "relationship_id",
+                "relationship_digest",
+                "source_artifact_digest",
+                "derivation_version"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "relationship_type": {
+                  "type": "string"
+                },
+                "subject_id": {
+                  "type": "string"
+                },
+                "object_id": {
+                  "type": "string"
+                },
+                "relationship_id": {
+                  "type": "string"
+                },
+                "relationship_digest": {
+                  "type": "string"
+                },
+                "source_artifact_digest": {
+                  "type": "string"
+                },
+                "derivation_version": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "coverage_state": {
+            "type": "string",
+            "enum": [
+              "complete",
+              "incomplete",
+              "unknown"
+            ],
+            "description": "Three states that never collapse into two. 'unknown' (the artifact records no coverage at all) is NOT 'complete'."
+          }
+        }
+      }
+    },
+    "counterevidence": {
+      "type": "array",
+      "description": "Direct contradictory FACTS. Empty for this detector, because none is available \u2014 never filled with an unknown, which would dress 'I did not check' as 'I checked and found otherwise'.",
+      "items": {}
+    },
+    "rule_id": {
+      "type": "string",
+      "enum": [
+        "exact_content_recurrence_across_repository_scopes",
+        "public_source_disappearance_review"
+      ]
+    },
+    "rule_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "rule_parameters": {
+      "type": "object",
+      "description": "Detector-owned rule parameters; the exact shape is pinned in each branch."
+    },
+    "distinct_repository_scope_count": {
+      "type": "integer",
+      "minimum": 2,
+      "description": "A neutral count of DISTINCT repository scope ids \u2014 not a count of rows, not a count of paths, and never a sort key or an importance proxy. Validation recomputes it from the evidence."
+    },
+    "rule_satisfied": {
+      "type": "boolean",
+      "const": true,
+      "description": "A candidate exists because the rule fired. This is not a score."
+    },
+    "unknowns": {
+      "type": "array",
+      "minItems": 10,
+      "description": "MANDATORY and closed. Every code must be present: an unknown that can be omitted is an unknown that quietly becomes a 'no'.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "archive_search_coverage_incomplete",
+          "authenticity_not_assessed",
+          "authorship_not_assessed",
+          "broad_outage_context_limited",
+          "future_recovery_possible",
+          "generated_file_status_unknown",
+          "independent_creation_not_assessed",
+          "legal_preservation_rights_unknown",
+          "local_copy_currentness_unknown",
+          "mirror_search_coverage_incomplete",
+          "novelty_not_assessed",
+          "permanent_disappearance_not_established",
+          "publication_eligibility_not_assessed",
+          "repository_lineage_not_assessed",
+          "scientific_importance_not_assessed",
+          "semantic_equivalence_not_assessed",
+          "significance_not_assessed",
+          "source_independence_not_assessed",
+          "source_owner_intent_unknown",
+          "source_relocation_not_fully_assessed",
+          "template_or_boilerplate_status_unknown",
+          "vendored_file_status_unknown"
+        ]
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "minItems": 8,
+      "description": "What exact byte recurrence does not prove. The first eight are always present; repository_inventory_incomplete is added exactly when some cited repository's content inventory was not fully accounted for.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "broad_outage_context_is_limited",
+          "candidate_does_not_authorize_disclosure",
+          "candidate_does_not_authorize_preservation",
+          "candidate_does_not_authorize_publication",
+          "candidate_does_not_authorize_release",
+          "candidate_does_not_contact_gateway",
+          "candidate_does_not_enroll_dead_mans_switch",
+          "candidate_is_not_a_finding",
+          "candidate_requires_operator_review",
+          "evidence_reflects_stored_observations_not_current_state",
+          "exact_byte_identity_only",
+          "exact_byte_identity_proves_exact_bytes_only",
+          "local_copy_fact_may_not_reflect_current_filesystem_state",
+          "mirror_and_archive_coverage_is_incomplete",
+          "not_found_does_not_prove_permanent_disappearance",
+          "operator_review_required",
+          "public_copy_does_not_prove_authenticity",
+          "recurrence_does_not_establish_significance",
+          "recurrence_does_not_prove_copying",
+          "recurrence_does_not_prove_independent_implementation",
+          "recurrence_does_not_prove_novelty",
+          "recurrence_does_not_prove_shared_capability",
+          "repository_inventory_incomplete",
+          "source_configuration_or_relocation_may_explain_not_found"
+        ]
+      }
+    },
+    "is_hypothesis": {
+      "type": "boolean",
+      "const": false
+    },
+    "is_finding": {
+      "type": "boolean",
+      "const": false
+    },
+    "is_verified": {
+      "type": "boolean",
+      "const": false
+    },
+    "is_published": {
+      "type": "boolean",
+      "const": false
+    },
+    "authorizes_action": {
+      "type": "boolean",
+      "const": false
+    },
+    "authorizes_execution": {
+      "type": "boolean",
+      "const": false
+    },
+    "authorizes_release": {
+      "type": "boolean",
+      "const": false
+    },
+    "activates_profile": {
+      "type": "boolean",
+      "const": false
+    },
+    "contacts_gateway": {
+      "type": "boolean",
+      "const": false
+    },
+    "uses_llm": {
+      "type": "boolean",
+      "const": false
+    },
+    "operator_review_required": {
+      "type": "boolean",
+      "const": true
+    },
+    "evidence": {
+      "type": "object",
+      "description": "Scientific-preservation detector evidence: the closed section set is pinned in the scientific branch below. Absent for the repository detector."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "detector_id"
+        ],
+        "properties": {
+          "detector_id": {
+            "const": "repository_exact_content_recurrence"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "activates_profile",
+          "artifact_digest",
+          "authorizes_action",
+          "authorizes_execution",
+          "authorizes_release",
+          "candidate_id",
+          "candidate_key",
+          "candidate_state",
+          "candidate_type",
+          "contacts_gateway",
+          "counterevidence",
+          "created_at",
+          "detector_id",
+          "detector_version",
+          "deterministic_serialization_version",
+          "digest_algorithm",
+          "distinct_repository_scope_count",
+          "generator_version",
+          "is_finding",
+          "is_hypothesis",
+          "is_published",
+          "is_verified",
+          "limitations",
+          "operator_review_required",
+          "profile_id",
+          "rule_id",
+          "rule_parameters",
+          "rule_satisfied",
+          "rule_version",
+          "schema_version",
+          "subject",
+          "supporting_occurrences",
+          "unknowns",
+          "uses_llm"
+        ],
+        "properties": {
+          "detector_id": {
+            "const": "repository_exact_content_recurrence"
+          },
+          "profile_id": {
+            "const": "repository_capability_discovery"
+          },
+          "candidate_type": {
+            "const": "repository_exact_content_recurrence"
+          },
+          "rule_id": {
+            "const": "exact_content_recurrence_across_repository_scopes"
+          },
+          "unknowns": {
+            "items": {
+              "enum": [
+                "authorship_not_assessed",
+                "generated_file_status_unknown",
+                "independent_creation_not_assessed",
+                "novelty_not_assessed",
+                "repository_lineage_not_assessed",
+                "semantic_equivalence_not_assessed",
+                "significance_not_assessed",
+                "source_independence_not_assessed",
+                "template_or_boilerplate_status_unknown",
+                "vendored_file_status_unknown"
+              ]
+            }
+          },
+          "limitations": {
+            "items": {
+              "enum": [
+                "evidence_reflects_stored_observations_not_current_state",
+                "exact_byte_identity_only",
+                "operator_review_required",
+                "recurrence_does_not_establish_significance",
+                "recurrence_does_not_prove_copying",
+                "recurrence_does_not_prove_independent_implementation",
+                "recurrence_does_not_prove_novelty",
+                "recurrence_does_not_prove_shared_capability",
+                "repository_inventory_incomplete"
+              ]
+            }
+          }
+        },
+        "not": {
+          "required": [
+            "evidence"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "detector_id"
+        ],
+        "properties": {
+          "detector_id": {
+            "const": "scientific_source_disappearance_review"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "activates_profile",
+          "artifact_digest",
+          "authorizes_action",
+          "authorizes_execution",
+          "authorizes_release",
+          "candidate_id",
+          "candidate_key",
+          "candidate_state",
+          "candidate_type",
+          "contacts_gateway",
+          "counterevidence",
+          "created_at",
+          "detector_id",
+          "detector_version",
+          "deterministic_serialization_version",
+          "digest_algorithm",
+          "evidence",
+          "generator_version",
+          "is_finding",
+          "is_hypothesis",
+          "is_published",
+          "is_verified",
+          "limitations",
+          "operator_review_required",
+          "profile_id",
+          "rule_id",
+          "rule_parameters",
+          "rule_satisfied",
+          "rule_version",
+          "schema_version",
+          "subject",
+          "unknowns",
+          "uses_llm"
+        ],
+        "properties": {
+          "detector_id": {
+            "const": "scientific_source_disappearance_review"
+          },
+          "profile_id": {
+            "const": "scientific_preservation"
+          },
+          "candidate_type": {
+            "const": "disappearing_scientific_source"
+          },
+          "rule_id": {
+            "const": "public_source_disappearance_review"
+          },
+          "unknowns": {
+            "items": {
+              "enum": [
+                "archive_search_coverage_incomplete",
+                "authenticity_not_assessed",
+                "broad_outage_context_limited",
+                "future_recovery_possible",
+                "legal_preservation_rights_unknown",
+                "local_copy_currentness_unknown",
+                "mirror_search_coverage_incomplete",
+                "permanent_disappearance_not_established",
+                "publication_eligibility_not_assessed",
+                "scientific_importance_not_assessed",
+                "source_owner_intent_unknown",
+                "source_relocation_not_fully_assessed"
+              ]
+            }
+          },
+          "limitations": {
+            "items": {
+              "enum": [
+                "broad_outage_context_is_limited",
+                "candidate_does_not_authorize_disclosure",
+                "candidate_does_not_authorize_preservation",
+                "candidate_does_not_authorize_publication",
+                "candidate_does_not_authorize_release",
+                "candidate_does_not_contact_gateway",
+                "candidate_does_not_enroll_dead_mans_switch",
+                "candidate_is_not_a_finding",
+                "candidate_requires_operator_review",
+                "exact_byte_identity_proves_exact_bytes_only",
+                "local_copy_fact_may_not_reflect_current_filesystem_state",
+                "mirror_and_archive_coverage_is_incomplete",
+                "not_found_does_not_prove_permanent_disappearance",
+                "public_copy_does_not_prove_authenticity",
+                "source_configuration_or_relocation_may_explain_not_found"
+              ]
+            }
+          },
+          "evidence": {
+            "type": "object",
+            "required": [
+              "locator",
+              "outage_context",
+              "prior_success",
+              "provenance",
+              "rule_result",
+              "source",
+              "subject",
+              "temporal_rule",
+              "triggering_not_found"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "locator": {
+                "type": "object"
+              },
+              "outage_context": {
+                "type": "object"
+              },
+              "prior_success": {
+                "type": "object"
+              },
+              "provenance": {
+                "type": "object"
+              },
+              "rule_result": {
+                "type": "object"
+              },
+              "source": {
+                "type": "object"
+              },
+              "subject": {
+                "type": "object"
+              },
+              "temporal_rule": {
+                "type": "object"
+              },
+              "triggering_not_found": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "supporting_occurrences"
+              ]
+            },
+            {
+              "required": [
+                "distinct_repository_scope_count"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

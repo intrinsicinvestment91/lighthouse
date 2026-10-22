@@ -1,0 +1,272 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lighthouse.local/schemas/observed_source_reference.v0.schema.json",
+  "title": "observed_source_reference.v0",
+  "description": "DESIGN DRAFT (SOVEREIGN-INTEROP-02B; consumer-profile amendment 2026-07-16). An immutable, byte-honest reference emitted by Lighthouse from ONE validated `available` public_source_check.v1. Closed two-consumer-profile discriminated union: exactly one of (intended_consumer=article-to-skills, intended_use=exact_source_byte_preflight_before_skill_derivation) [Profile A, unchanged byte-for-byte] or (intended_consumer=offline-sovereign-stack, intended_use=exact_source_byte_preflight_for_local_retention) [Profile B, additive]. Each CONSUMER's own validator additionally refuses the other profile. Carries NO source body and NO authority. NOT YET PRODUCTION-CANONICAL. Identity-covered content = every field EXCEPT reference_id, artifact_digest, producer_repository, producer_commit. artifact_digest = sha256(canonical_json(identity-covered content)); reference_id = 'osr_' + artifact_digest.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_digest",
+    "authenticity_established",
+    "body_included",
+    "body_retained_by_producer",
+    "canonical_locator",
+    "candidate_approval_granted",
+    "canonicalization_version",
+    "check_artifact_digest",
+    "check_id",
+    "checked_at",
+    "consumer_must_supply_local_file",
+    "consumer_must_verify_exact_digest",
+    "content_digest",
+    "content_digest_algorithm",
+    "content_identity",
+    "content_size_bytes",
+    "content_type",
+    "deterministic_export_version",
+    "disclosure_authorized",
+    "execution_authorized",
+    "external_publication_authorized",
+    "final_locator",
+    "gateway_approval_granted",
+    "http_status",
+    "installation_authorized",
+    "intended_consumer",
+    "intended_use",
+    "legal_retention_rights_established",
+    "local_only",
+    "locator_id",
+    "operator_derivation_invocation_required",
+    "operator_handoff_required",
+    "outcome",
+    "privacy_class",
+    "producer_commit",
+    "producer_contract",
+    "producer_repository",
+    "producer_system",
+    "redirected",
+    "redistribution_rights_established",
+    "reference_id",
+    "registry_publication_authorized",
+    "retention_authorized",
+    "run_artifact_digest",
+    "run_id",
+    "schema_version",
+    "scientific_correctness_established",
+    "skill_derivation_authorized",
+    "source_class",
+    "source_id"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "observed_source_reference.v0"
+    },
+    "reference_id": {
+      "type": "string",
+      "pattern": "^osr_[0-9a-f]{64}$"
+    },
+    "artifact_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "producer_system": {
+      "const": "lighthouse"
+    },
+    "producer_contract": {
+      "const": "public_source_check.v1"
+    },
+    "deterministic_export_version": {
+      "const": "observed_source_reference_exporter.v0"
+    },
+    "canonicalization_version": {
+      "const": "lighthouse_canonical_json.v1"
+    },
+    "producer_repository": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "producer_commit": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "intended_consumer": {
+      "enum": [
+        "article-to-skills",
+        "offline-sovereign-stack"
+      ]
+    },
+    "intended_use": {
+      "enum": [
+        "exact_source_byte_preflight_before_skill_derivation",
+        "exact_source_byte_preflight_for_local_retention"
+      ]
+    },
+    "source_id": {
+      "type": "string",
+      "pattern": "^public-source:[0-9a-f]{64}$"
+    },
+    "locator_id": {
+      "type": "string",
+      "pattern": "^public-locator:[0-9a-f]{64}$"
+    },
+    "canonical_locator": {
+      "type": "string",
+      "pattern": "^https://",
+      "maxLength": 2048
+    },
+    "final_locator": {
+      "type": "string",
+      "pattern": "^https://",
+      "maxLength": 2048
+    },
+    "redirected": {
+      "type": "boolean"
+    },
+    "source_class": {
+      "const": "public_source"
+    },
+    "privacy_class": {
+      "const": "public"
+    },
+    "local_only": {
+      "const": true
+    },
+    "check_id": {
+      "type": "string",
+      "pattern": "^psc_[0-9a-f]{64}$"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^psr_[0-9a-f]{64}$"
+    },
+    "check_artifact_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "run_artifact_digest": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "checked_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$"
+    },
+    "outcome": {
+      "const": "available"
+    },
+    "http_status": {
+      "type": "integer",
+      "minimum": 200,
+      "maximum": 299
+    },
+    "content_type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 128
+    },
+    "content_size_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "content_identity": {
+      "type": "string",
+      "pattern": "^content:[0-9a-f]{64}$"
+    },
+    "content_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "content_digest_algorithm": {
+      "const": "sha256"
+    },
+    "body_included": {
+      "const": false
+    },
+    "body_retained_by_producer": {
+      "const": false
+    },
+    "consumer_must_supply_local_file": {
+      "const": true
+    },
+    "consumer_must_verify_exact_digest": {
+      "const": true
+    },
+    "authenticity_established": {
+      "const": false
+    },
+    "scientific_correctness_established": {
+      "const": false
+    },
+    "legal_retention_rights_established": {
+      "const": false
+    },
+    "redistribution_rights_established": {
+      "const": false
+    },
+    "retention_authorized": {
+      "const": false
+    },
+    "skill_derivation_authorized": {
+      "const": false
+    },
+    "candidate_approval_granted": {
+      "const": false
+    },
+    "registry_publication_authorized": {
+      "const": false
+    },
+    "external_publication_authorized": {
+      "const": false
+    },
+    "installation_authorized": {
+      "const": false
+    },
+    "execution_authorized": {
+      "const": false
+    },
+    "disclosure_authorized": {
+      "const": false
+    },
+    "gateway_approval_granted": {
+      "const": false
+    },
+    "operator_handoff_required": {
+      "const": true
+    },
+    "operator_derivation_invocation_required": {
+      "const": true
+    }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "intended_consumer": {
+          "const": "article-to-skills"
+        },
+        "intended_use": {
+          "const": "exact_source_byte_preflight_before_skill_derivation"
+        }
+      }
+    },
+    {
+      "properties": {
+        "intended_consumer": {
+          "const": "offline-sovereign-stack"
+        },
+        "intended_use": {
+          "const": "exact_source_byte_preflight_for_local_retention"
+        }
+      }
+    }
+  ]
+}

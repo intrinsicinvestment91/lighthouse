@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "active_profile_state.v1",
+  "title": "Lighthouse Active Profile State",
+  "description": "The record shape lighthouse.active_profile_store persists: exactly which intelligence profile is active, or the explicit declaration that none is (LHP-PROFILE-14B/01E, ADR-0016). Absence is DECLARED via activation_state='no_active_profile' — never inferred from missing data, never a default. No half states: an 'active' record carries all five identity facts valid and present plus digest-covered activation evidence references; a 'no_active_profile' record carries all identity and evidence fields as exactly null. Initial activation is local-only via profile_activation (LHP-V1-PROFILE-01C/01E). This document is a human/Gateway-facing reference mirror; the AUTHORITATIVE enforcer is modules/active_profile_state.py (ActiveProfileState.validate(), which also RECOMPUTES artifact_digest).",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "activation_state",
+    "active_profile_id",
+    "active_profile_version",
+    "activated_at",
+    "activation_source",
+    "active_profile_sha256",
+    "transition_preview_id",
+    "transition_preview_digest",
+    "backup_manifest_id",
+    "backup_manifest_sha256",
+    "verification_report_digest",
+    "restore_report_digest",
+    "source_data_root",
+    "backup_root",
+    "artifact_digest"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1,
+      "description": "Contract version. Unknown/future versions fail closed."
+    },
+    "activation_state": {
+      "type": "string",
+      "enum": ["active", "no_active_profile"],
+      "description": "The explicit discriminator: absence of an active profile is a declared state, not an inference."
+    },
+    "active_profile_id": {
+      "type": ["string", "null"],
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Which profile is active (null iff no_active_profile)."
+    },
+    "active_profile_version": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "description": "Version of the active profile (null iff no_active_profile)."
+    },
+    "activated_at": {
+      "type": ["string", "null"],
+      "description": "Timezone-aware ISO-8601 activation time (null iff no_active_profile). Digest-covered."
+    },
+    "activation_source": {
+      "type": ["string", "null"],
+      "enum": ["operator_approved_transition", "operator_local_cli_confirmation", null],
+      "description": "How activation happened — closed vocabulary."
+    },
+    "active_profile_sha256": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 over the active profile's full canonical content at activation time (null iff no_active_profile)."
+    },
+    "transition_preview_id": {
+      "type": ["string", "null"],
+      "description": "Transition preview identity bound at activation (null iff no_active_profile)."
+    },
+    "transition_preview_digest": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 over the transition preview artifact content (null iff no_active_profile)."
+    },
+    "backup_manifest_id": {
+      "type": ["string", "null"],
+      "description": "Backup manifest identity bound at activation (null iff no_active_profile)."
+    },
+    "backup_manifest_sha256": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 over the backup manifest file bytes (null iff no_active_profile)."
+    },
+    "verification_report_digest": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 over the verification report file bytes (null iff no_active_profile)."
+    },
+    "restore_report_digest": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 over the restore-drill report file bytes (null iff no_active_profile)."
+    },
+    "source_data_root": {
+      "type": ["string", "null"],
+      "description": "Normalized source data snapshot root bound at activation (null iff no_active_profile)."
+    },
+    "backup_root": {
+      "type": ["string", "null"],
+      "description": "Normalized verified backup root bound at activation (null iff no_active_profile)."
+    },
+    "artifact_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 over the canonical record content (sort_keys, compact separators). Excludes ONLY itself."
+    }
+  }
+}

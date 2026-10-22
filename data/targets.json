@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "targets": [
+    {
+      "name": "fusion_research",
+      "entities": [
+        "Helion Energy",
+        "Commonwealth Fusion Systems",
+        "TAE Technologies"
+      ],
+      "keywords": [
+        "fusion",
+        "plasma",
+        "tokamak",
+        "stellarator",
+        "field-reversed configuration"
+      ],
+      "signals": [
+        "sec",
+        "patent",
+        "arxiv",
+        "flight",
+        "adsb"
+      ],
+      "regions": [
+        "us"
+      ],
+      "priority": "high",
+      "enabled": true,
+      "metadata": {
+        "description": "Focused monitoring of private fusion and advanced plasma research signals."
+      },
+      "schema_version": 1
+    },
+    {
+      "name": "aerospace_defense",
+      "entities": [
+        "Lockheed Martin",
+        "Aerojet Rocketdyne",
+        "General Atomics"
+      ],
+      "keywords": [
+        "hypersonic",
+        "propulsion",
+        "directed energy",
+        "missile",
+        "space systems"
+      ],
+      "signals": [
+        "sec",
+        "patent",
+        "flight",
+        "adsb",
+        "archive"
+      ],
+      "regions": [
+        "us"
+      ],
+      "priority": "high",
+      "enabled": true,
+      "metadata": {
+        "description": "Focused monitoring of aerospace and defense industrial signals."
+      },
+      "schema_version": 1
+    },
+    {
+      "name": "advanced_research_institutions",
+      "entities": [
+        "MIT Lincoln Laboratory",
+        "JPL",
+        "Lawrence Livermore National Laboratory"
+      ],
+      "keywords": [
+        "advanced research",
+        "prototype",
+        "classified",
+        "laboratory",
+        "dual-use"
+      ],
+      "signals": [
+        "arxiv",
+        "flight",
+        "adsb",
+        "narrative",
+        "archive"
+      ],
+      "regions": [
+        "us"
+      ],
+      "priority": "medium",
+      "enabled": true,
+      "metadata": {
+        "description": "Focused monitoring of public signals around major research institutions."
+      },
+      "schema_version": 1
+    },
+    {
+      "name": "government_defense_labs",
+      "entities": [
+        "DARPA",
+        "Defense Advanced Research Projects Agency",
+        "AFRL",
+        "Naval Research Laboratory"
+      ],
+      "keywords": [
+        "hypersonic",
+        "directed energy",
+        "advanced propulsion",
+        "prototype",
+        "autonomous systems",
+        "test flight",
+        "dual-use"
+      ],
+      "signals": [
+        "flight",
+        "adsb",
+        "archive",
+        "narrative"
+      ],
+      "regions": [
+        "us"
+      ],
+      "priority": "medium",
+      "enabled": true,
+      "metadata": {
+        "description": "Focused monitoring of public flight, ADSB, and narrative signals around U.S. government defense research organizations."
+      },
+      "schema_version": 1
+    }
+  ]
+}

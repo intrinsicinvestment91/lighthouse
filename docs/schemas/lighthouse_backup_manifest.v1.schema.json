@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lighthouse_backup_manifest.v1",
+  "title": "Lighthouse Backup Manifest",
+  "description": "A versioned, deterministic inventory of the authoritative persistent state a Lighthouse backup covers. Records identity, classification, path, type, size, and integrity for every included item and embeds NO file contents, database rows, or secrets. This document is a human/Gateway-facing reference mirror; the AUTHORITATIVE enforcer is modules/backup_manifest.py (BackupManifest.validate()). Filenames and directory structure recorded here are themselves sensitive operational metadata.",
+  "type": "object",
+  "required": [
+    "manifest_schema_version",
+    "manifest_id",
+    "created_at",
+    "source_boundary",
+    "source_data_root",
+    "generator_version",
+    "inventory_complete",
+    "entries",
+    "summary"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "manifest_schema_version": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1,
+      "description": "Contract version. Unknown/future versions fail closed."
+    },
+    "manifest_id": {"type": "string", "minLength": 1},
+    "created_at": {
+      "type": "string",
+      "description": "ISO-8601 creation timestamp. One of the few deliberately time-dependent fields."
+    },
+    "lighthouse_version": {"type": ["string", "null"]},
+    "repository_commit": {"type": ["string", "null"]},
+    "profile_schema_version": {"type": ["integer", "null"]},
+    "source_boundary": {
+      "type": "string",
+      "description": "Absolute boundary authoritative state must resolve under (default /data)."
+    },
+    "source_data_root": {"type": "string"},
+    "generator_version": {"type": "string"},
+    "inventory_complete": {
+      "type": "boolean",
+      "description": "True only when every required authoritative item was present, in-boundary, and snapshottable."
+    },
+    "entries": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/entry"}
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "total_entries",
+        "total_files",
+        "total_bytes",
+        "authoritative_entries",
+        "excluded_entries",
+        "warnings",
+        "blocking_failures",
+        "readiness_result"
+      ],
+      "properties": {
+        "total_entries": {"type": "integer", "minimum": 0},
+        "total_files": {"type": "integer", "minimum": 0},
+        "total_bytes": {"type": "integer", "minimum": 0},
+        "authoritative_entries": {"type": "integer", "minimum": 0},
+        "excluded_entries": {"type": "integer", "minimum": 0},
+        "warnings": {"type": "array", "items": {"type": "string"}},
+        "blocking_failures": {"type": "array", "items": {"type": "string"}},
+        "readiness_result": {"type": "string", "enum": ["READY", "UNKNOWN", "NOT_READY"]}
+      }
+    }
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "required": [
+        "entry_id",
+        "state_category",
+        "logical_name",
+        "relative_path",
+        "entry_type",
+        "required",
+        "size_bytes",
+        "digest",
+        "digest_algorithm"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "entry_id": {
+          "type": "string",
+          "description": "Deterministic identity derived from the relative payload path."
+        },
+        "state_category": {
+          "type": "string",
+          "enum": [
+            "authoritative_persistent",
+            "reconstructable_persistent",
+            "runtime_ephemeral",
+            "bundled_immutable",
+            "external_unmanaged"
+          ]
+        },
+        "logical_name": {"type": "string"},
+        "relative_path": {
+          "type": "string",
+          "description": "Path under the payload/ root. MUST be relative — absolute paths and '..' traversal fail closed. Duplicate normalized paths fail closed."
+        },
+        "source_path": {
+          "type": "string",
+          "description": "Provenance only; never used to locate payload during verify/restore."
+        },
+        "entry_type": {
+          "type": "string",
+          "enum": ["file", "directory", "sqlite_database"]
+        },
+        "required": {"type": "boolean"},
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "digest": {"type": "string"},
+        "digest_algorithm": {"type": "string", "const": "sha256"},
+        "modified_at": {"type": ["string", "null"]},
+        "sqlite_integrity": {
+          "type": ["string", "null"],
+          "description": "Result of PRAGMA quick_check on the consistent snapshot ('ok' on success)."
+        },
+        "schema_version_meta": {"type": ["object", "null"]},
+        "inclusion_reason": {"type": "string"},
+        "reconstruction_notes": {"type": ["string", "null"]},
+        "children": {
+          "type": ["array", "null"],
+          "description": "For directory entries: per-file relative_path/digest/size_bytes, enabling child-level verification.",
+          "items": {
+            "type": "object",
+            "required": ["relative_path", "digest", "size_bytes"],
+            "properties": {
+              "relative_path": {"type": "string"},
+              "digest": {"type": "string"},
+              "size_bytes": {"type": "integer", "minimum": 0}
+            }
+          }
+        }
+      }
+    }
+  },
+  "$comment": "The manifest never embeds file contents, database rows, secrets, keys, tokens, or environment values. It is designed so later encryption can wrap the backup payload without changing manifest semantics."
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lighthouse_backup_verification.v1",
+  "title": "Lighthouse Backup Verification Report",
+  "description": "Typed output of lighthouse backup-verify / verify_backup(). Binds to the exact manifest.json file bytes via manifest_sha256. artifact_digest is SHA-256 over canonical JSON of every field except itself (same recipe as active_profile_state.v1). This document is a human/Gateway-facing reference mirror; the AUTHORITATIVE enforcer is modules/backup_verify.py (BackupVerificationReport.validate()).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_schema",
+    "schema_version",
+    "status",
+    "backup_root",
+    "manifest_id",
+    "manifest_sha256",
+    "checked_entries",
+    "structural_errors",
+    "missing_payload",
+    "digest_mismatches",
+    "extra_payload",
+    "sqlite_integrity",
+    "blocking_failures",
+    "warnings",
+    "artifact_digest"
+  ],
+  "properties": {
+    "report_schema": { "const": "lighthouse_backup_verification.v1" },
+    "schema_version": { "type": "integer", "const": 1 },
+    "status": { "type": "string", "enum": ["verified", "failed"] },
+    "backup_root": { "type": "string", "minLength": 1 },
+    "manifest_id": { "type": "string", "minLength": 1 },
+    "manifest_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the exact manifest.json file bytes, not a canonical JSON digest."
+    },
+    "checked_entries": { "type": "integer", "minimum": 0 },
+    "structural_errors": { "type": "array", "items": { "type": "string" } },
+    "missing_payload": { "type": "array", "items": { "type": "string" } },
+    "digest_mismatches": { "type": "array", "items": { "type": "string" } },
+    "extra_payload": { "type": "array", "items": { "type": "string" } },
+    "sqlite_integrity": { "type": "object", "additionalProperties": { "type": "string" } },
+    "blocking_failures": { "type": "array", "items": { "type": "string" } },
+    "warnings": { "type": "array", "items": { "type": "string" } },
+    "artifact_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Canonical report-content digest. Excludes only itself."
+    }
+  }
+}

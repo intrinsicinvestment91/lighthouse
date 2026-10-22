@@ -1,0 +1,234 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lighthouse.local/schemas/public_source_check.v1.schema.json",
+  "title": "public_source_check.v1",
+  "description": "One direct factual outcome of one attempt to fetch one admitted public HTTPS locator (LHP-INTEL-04B). Reference mirror only \u2014 the authoritative enforcer is modules.public_source_check.PublicSourceCheck.validate().",
+  "type": "object",
+  "required": [
+    "adapter_id",
+    "adapter_version",
+    "artifact_digest",
+    "authorizes_disclosure",
+    "authorizes_preservation",
+    "authorizes_publication",
+    "authorizes_release",
+    "body_size_bytes",
+    "canonical_locator",
+    "check_id",
+    "checked_at",
+    "confidence",
+    "contacts_gateway",
+    "content_digest",
+    "content_digest_algorithm",
+    "content_type",
+    "creates_candidate",
+    "digest_algorithm",
+    "disclosure_authorized",
+    "final_locator",
+    "http_status",
+    "is_candidate",
+    "is_finding",
+    "is_hypothesis",
+    "is_verified_finding",
+    "locator_id",
+    "outcome",
+    "policy_digest",
+    "policy_version",
+    "privacy_class",
+    "publication_authorized",
+    "redirect_chain",
+    "redirected",
+    "run_id",
+    "schema_version",
+    "source_class",
+    "source_id",
+    "uses_llm"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "adapter_id": {
+      "type": "string"
+    },
+    "adapter_version": {
+      "type": "string"
+    },
+    "artifact_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "authorizes_disclosure": {
+      "const": false
+    },
+    "authorizes_preservation": {
+      "const": false
+    },
+    "authorizes_publication": {
+      "const": false
+    },
+    "authorizes_release": {
+      "const": false
+    },
+    "body_size_bytes": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "canonical_locator": {
+      "type": "string"
+    },
+    "check_id": {
+      "type": "string",
+      "pattern": "^psc_[0-9a-f]{64}$"
+    },
+    "checked_at": {
+      "type": "string"
+    },
+    "confidence": {
+      "type": "number",
+      "enum": [
+        0.0,
+        1.0
+      ]
+    },
+    "contacts_gateway": {
+      "const": false
+    },
+    "content_digest": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "content_digest_algorithm": {
+      "enum": [
+        "sha256",
+        null
+      ]
+    },
+    "content_type": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "creates_candidate": {
+      "const": false
+    },
+    "digest_algorithm": {
+      "const": "sha256"
+    },
+    "disclosure_authorized": {
+      "const": false
+    },
+    "final_locator": {
+      "type": "string"
+    },
+    "http_status": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "is_candidate": {
+      "const": false
+    },
+    "is_finding": {
+      "const": false
+    },
+    "is_hypothesis": {
+      "const": false
+    },
+    "is_verified_finding": {
+      "const": false
+    },
+    "locator_id": {
+      "type": "string",
+      "pattern": "^public-locator:[0-9a-f]{64}$"
+    },
+    "outcome": {
+      "enum": [
+        "adapter_failure",
+        "authentication_required",
+        "available",
+        "client_error",
+        "connection_failure",
+        "dns_failure",
+        "incomplete_response",
+        "not_found",
+        "policy_refused",
+        "rate_limited",
+        "redirected_failure",
+        "response_too_large",
+        "run_byte_budget_exceeded",
+        "server_error",
+        "timeout",
+        "tls_failure",
+        "unknown",
+        "unsupported_content_encoding"
+      ]
+    },
+    "policy_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "policy_version": {
+      "const": "public_source_policy.v1"
+    },
+    "privacy_class": {
+      "const": "public"
+    },
+    "publication_authorized": {
+      "const": false
+    },
+    "redirect_chain": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "from_locator",
+          "to_locator",
+          "http_status"
+        ],
+        "properties": {
+          "from_locator": {
+            "type": "string"
+          },
+          "to_locator": {
+            "type": "string"
+          },
+          "http_status": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "redirected": {
+      "type": "boolean"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^psr_[0-9a-f]{64}$"
+    },
+    "schema_version": {
+      "const": "public_source_check.v1"
+    },
+    "source_class": {
+      "const": "public_source"
+    },
+    "source_id": {
+      "type": "string",
+      "pattern": "^public-source:[0-9a-f]{64}$"
+    },
+    "uses_llm": {
+      "const": false
+    }
+  }
+}
