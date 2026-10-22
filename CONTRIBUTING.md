@@ -7,7 +7,7 @@
 ## Development Setup
 
 ```bash
-git clone https://example.invalid/lighthouse pattern-match-sentinel
+git clone https://github.com/intrinsicinvestment91/lighthouse pattern-match-sentinel
 cd pattern-match-sentinel
 
 # Install with dev extras

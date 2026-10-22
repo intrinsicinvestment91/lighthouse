@@ -85,7 +85,7 @@ files are git-ignored; only `.gitkeep` placeholders are tracked.
 ### 1. Clone and install
 
 ```bash
-git clone https://example.invalid/lighthouse pattern-match-sentinel
+git clone https://github.com/intrinsicinvestment91/lighthouse pattern-match-sentinel
 cd pattern-match-sentinel
 pip install -e ".[dev]"
 playwright install chromium

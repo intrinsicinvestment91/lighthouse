@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.invalid/lighthouse/docs/schemas/lighthouse_activation_capability.v1.schema.json",
+  "$id": "https://github.com/intrinsicinvestment91/lighthouse/blob/main/docs/schemas/lighthouse_activation_capability.v1.schema.json",
   "title": "lighthouse_activation_capability.v1",
   "description": "Lighthouse's self-description of the profile-activation capability it would provide. A PROVIDER SELF-DESCRIPTION — not a Gateway capability definition (which owns trust floors, freshness windows, lifecycle status and repo_audit_status) and not an attestation (which the Gateway issues). Reference mirror only: the authoritative enforcer is ActivationCapabilityDescriptor.validate() in modules/activation_capability.py. Nothing in this contract activates, switches, stores, or executes anything (LHP-PROFILE-14C, ADR-0017).",
   "type": "object",
